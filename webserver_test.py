@@ -4,10 +4,12 @@ from subprocess import PIPE
 import sys
 
 # The expected output from curl as a regular expression
-curl_output_expected = ("GET / HTTP/1\\.0\r\n"
-                        "Host: localhost:\\d+\r\n"
-                        "User-Agent: curl/\\d+\\.\\d+\\.\\d+\r\n"
-                        "Accept: \\*/\\*\r\n")
+curl_output_expected = [
+    "GET / HTTP/1\\.0\r\n",
+    "Host: localhost:\\d+\r\n",
+    "User-Agent: curl/\\d+\\.\\d+\\.\\d+\r\n",
+    "Accept: \\*/\\*\r\n"
+]
 
 # We start off with the assumption that the test will succeed
 ec = 0
@@ -17,10 +19,17 @@ webserver = Popen(["./webserver", "port_config"], stdout=PIPE)
 
 # Query the web server using curl
 curl = Popen(["curl", "-0", "-s", "localhost:1234"], stdout=PIPE)
-curl_output = curl.communicate()[0]
-curl_output_pattern = re.compile(curl_output_expected)
-if not curl_output_pattern.match(curl_output):
-    ec = 1
+curl_output = curl.communicate()[0].decode()
+sys.stdout.write("\nActual output from server\n")
+sys.stdout.write("==========\n")
+sys.stdout.write(curl_output)
+sys.stdout.write("==========\n\n")
+for string in curl_output_expected:
+    pattern = re.compile(string)
+    if not pattern.search(curl_output):
+        ec = 1
+        sys.stdout.write("FAILED to match the following regular expression:\n")
+        sys.stdout.write("  " + string + "\n")
 
 # Close the webserver
 webserver.terminate()
@@ -31,13 +40,5 @@ if ec == 0:
     sys.exit(0)
 else:
     sys.stdout.write("INTEGRATION TEST FAILED\n")
-    sys.stderr.write("\nExpected output from curl (regular expression)\n")
-    sys.stderr.write("==========\n")
-    sys.stderr.write(curl_output_expected)
-    sys.stderr.write("==========\n")
-    sys.stderr.write("\nActual output from curl\n")
-    sys.stderr.write("==========\n")
-    sys.stderr.write(curl_output)
-    sys.stderr.write("==========\n\n")
     sys.exit(ec)
 
