@@ -34,7 +34,7 @@ clean_target:
 	$(RM) $(TARGET)
 
 clean: clean_target
-	$(RM) $(GCOVFILES) $(TESTEXEC) $(GTEST_FILES)
+	$(RM) $(GCOVFILES) $(TESTEXEC) $(GTEST_FILES) *_gcov.txt
 
 test_gcov: $(TARGET) $(GCOVEXEC)
 
@@ -49,20 +49,19 @@ config_parser_test: test_setup config_parser.cc config_parser_test.cc
 	g++ $(GCOVFLAGS) $(TESTFLAGS) config_parser_test.cc config_parser.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
 	./$@
 
-config_parser_gcov:
-	gcov -r config_parser_test.cc && gcov -r config_parser_test.h && gcov -r config_parser.cc && gcov -r config_parser.h
+config_parser_gcov: config_parser_test
+	gcov -r config_parser.cc > config_parser_gcov.txt
 
 http_response_test: test_setup http_response.cc http_response_test.cc
 	g++ $(GCOVFLAGS) $(TESTFLAGS) http_response_test.cc http_response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
 	./$@
 
-http_response_gcov:
-	gcov -r http_response_test.cc && gcov -r http_response_test.h && gcov -r http_response.cc && gcov -r http_response.h
+http_response_gcov: http_response_test
+	gcov -r http_response.cc > http_response_gcov.txt
 
 server_config_parser_test: test_setup server_config_parser.cc server_config_parser_test.cc
 	g++ $(GCOVFLAGS) $(TESTFLAGS) server_config_parser_test.cc server_config_parser.cc config_parser.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
 	./$@
 
-server_config_parser_gcov:
-	gcov -r server_config_parser_test.cc && gcov -r server_config_parser_test.h && gcov server_config_parser.cc && gcov server_config_parser.h
-
+server_config_parser_gcov: server_config_parser_test
+	gcov -r server_config_parser.cc > server_config_parser_gcov.txt
