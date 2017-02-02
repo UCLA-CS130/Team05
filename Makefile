@@ -36,7 +36,7 @@ clean_target:
 clean: clean_target
 	$(RM) $(GCOVFILES) $(TESTEXEC) $(GTEST_FILES) *_gcov.txt
 
-test_gcov: $(TARGET) $(GCOVEXEC)
+test_gcov: $(GCOVEXEC)
 
 test_setup: 
 	g++ $(TESTFLAGS) -I${GTEST_DIR} -c ${GTEST_DIR}/src/gtest-all.cc
