@@ -40,7 +40,7 @@ private:
     http::request_parser parser;      // Parser for incoming client requests
     http::request        request;     // Structure for storing client requests
     tcp::socket          socket;      // Used to represent a client
-    const std::vector<http::handler *> handlers; // Vector of request handlers
+    const std::vector<http::handler *>& handlers; // Vector of request handlers
 };
 
 
@@ -58,7 +58,7 @@ private:
 
     tcp::acceptor acceptor; // Used in boost.asio to take in new clients
     tcp::socket   socket;   // Used in boost.asio to represent clients
-    std::vector<http::handler *> handlers; // Vector of request handlers
+    std::vector<http::handler *> handlers; // Vector of request handlers, going to be used across multiple threads
 };
 
 #endif // SERVER_H
