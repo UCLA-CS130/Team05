@@ -14,10 +14,9 @@ using boost::asio::ip::tcp;
 
 
 // Constructor
-session::session(tcp::socket sock, std::vector<http::handler *> handlers) :
-    socket(std::move(sock)) {
-        this->handlers = handlers;
-
+session::session(tcp::socket sock, const std::vector<http::handler *> &handlers) :
+    socket(std::move(sock)), handlers(handlers) {
+        
 }
 
 
@@ -43,7 +42,6 @@ void session::do_read() {
                     request, buf.data(), buf.data() + len);
                 if (rslt == http::request_parser::good) {
                     
-                    
                     std::string base_url = request.path.substr(0, request.path.find("/", 1)); 
 
                     // look for correct handler with matching base urls
@@ -56,9 +54,6 @@ void session::do_read() {
 
                     // if can't find match, return response not found
                     do_write(http::response::default_response(http::response::not_found));
-
-    
-                    
 
 
                 } else if (rslt == http::request_parser::bad) {

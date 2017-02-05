@@ -36,9 +36,7 @@ int main(int argc, char* argv[]) {
         handlers.push_back(&handler0);
         handlers.push_back(&handler1);
       
-
-       
-        
+     
 
         // Start the server
         boost::asio::io_service io_service;

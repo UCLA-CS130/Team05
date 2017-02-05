@@ -39,7 +39,7 @@ static std::string extension_to_type(const std::string& extension) {
 
 
 // Constructor used for choosing the root path for the handler
-handler_file::handler_file(const std::string& doc_root, std::string base_url) : handler(base_url), root(doc_root) {
+handler_file::handler_file(const std::string& doc_root, const std::string& base_url) : handler(base_url), root(doc_root) {
 }
 
 
@@ -53,14 +53,15 @@ response handler_file::handle_request(const request& req) {
         extension = req.path.substr(last_dot_pos + 1);
     }
 
+    std::string file_path = req.path.substr(this->base_url.length());
 
-    // for if base url is put but nothing else
-    if (req.path.substr(this->base_url.length()) == "") {
+    // For if base url is provided by user but nothing else
+    if (file_path == "") {
         return response::default_response(response::not_found);
     }
 
     // Open the file to send back
-    std::string full_path = root + req.path.substr(this->base_url.length());
+    std::string full_path = root + file_path;
     printf("|File path: %s|\n", full_path.c_str());
 
     std::ifstream file(full_path.c_str(), std::ios::in | std::ios::binary);

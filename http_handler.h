@@ -14,18 +14,14 @@ struct request;
 class handler {
 public:
 
-    handler(std::string base_url) { this->base_url = base_url;};
+    handler(const std::string& url) : base_url(url) { };
 
     // Returns a response to the given request
     virtual response handle_request(const request& req) = 0;
 
-
-
-    std::string base_url;
+    std::string base_url; // Base url that corresponds to this handler
 
 };
-
-
 
 
 } // namespace http
