@@ -1,2 +1,5 @@
 port 1234;
 
+echo /echo_url;
+
+static_serve /static_serve_url /root_directory;
