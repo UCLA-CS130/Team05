@@ -14,8 +14,9 @@ using boost::asio::ip::tcp;
 
 
 // Constructor
-session::session(tcp::socket sock) :
+session::session(tcp::socket sock, std::vector<http::handler *> handlers) :
     socket(std::move(sock)) {
+        this->handlers = handlers;
 
 }
 
@@ -41,14 +42,25 @@ void session::do_read() {
                 std::tie(rslt, std::ignore) = parser.parse(
                     request, buf.data(), buf.data() + len);
                 if (rslt == http::request_parser::good) {
-                    // TODO: Use the config file to create'n'choose handlers
-                    if (request.path == "/echo") {
-                        http::handler_echo handler;
-                        do_write(handler.handle_request(request));
-                    } else {
-                        http::handler_file handler("./");
-                        do_write(handler.handle_request(request));
+                    
+                    
+                    std::string base_url = request.path.substr(0, request.path.find("/", 1)); 
+
+                    // look for correct handler with matching base urls
+                    for (size_t i = 0; i < handlers.size(); i++) {
+                        if (base_url == handlers[i]->base_url) {
+                            do_write(handlers[i]->handle_request(request));
+                            return;
+                        }
                     }
+
+                    // if can't find match, return response not found
+                    do_write(http::response::default_response(http::response::not_found));
+
+    
+                    
+
+
                 } else if (rslt == http::request_parser::bad) {
                     do_write(http::response::default_response(
                         http::response::bad_request));
@@ -84,10 +96,11 @@ void session::do_write(const http::response& res) {
 
 
 // Constructor
-server::server(boost::asio::io_service& io_service, short port) :
-    acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
+server::server(boost::asio::io_service& io_service, short port, std::vector<http::handler *> handlers) :
+    acceptor(io_service, tcp::endpoint(tcp::v4(), port)), 
     socket(io_service) {
     // Start accepting clients as soon as the server instance is created
+    this->handlers = handlers;
     do_accept();
 }
 
@@ -101,7 +114,7 @@ void server::do_accept()
             // Check if an error has occurred during the connection
             if (!ec) {
                 // No error : creates a session between the client and server
-                std::make_shared<session>(std::move(socket))->start();
+                std::make_shared<session>(std::move(socket), this->handlers)->start();
             }
 
             // Repeatedly do this

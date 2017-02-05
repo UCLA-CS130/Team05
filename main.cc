@@ -25,9 +25,24 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
+        
+        // TODO: replace this with info from the config parser
+             
+        std::vector<http::handler *> handlers;
+
+        http::handler_echo handler0("/echo");
+        http::handler_file handler1(".", "/static1");
+
+        handlers.push_back(&handler0);
+        handlers.push_back(&handler1);
+      
+
+       
+        
+
         // Start the server
         boost::asio::io_service io_service;
-        server s(io_service, port);
+        server s(io_service, port, handlers);
         printf("Running server on port %d...\n", port);
         io_service.run();
     } catch (std::exception& e) {
