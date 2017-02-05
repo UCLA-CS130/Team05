@@ -20,7 +20,7 @@ class session : public std::enable_shared_from_this<session> {
 public:
 
     // Constructor
-    session(tcp::socket sock, std::vector<http::handler *> handlers);
+    session(tcp::socket sock, const std::vector<std::unique_ptr<http::handler> >&handlers);
 
     // Starts the session between client and server
     void start();
@@ -40,8 +40,7 @@ private:
     http::request_parser parser;      // Parser for incoming client requests
     http::request        request;     // Structure for storing client requests
     tcp::socket          socket;      // Used to represent a client
-    std::vector<http::handler *> handlers;
-
+    const std::vector<std::unique_ptr<http::handler> >& handlers; // Vector of request handlers
 };
 
 
@@ -50,7 +49,7 @@ class server  {
 public:
 
     // Constructor
-    server(boost::asio::io_service& io_service, short port, std::vector<http::handler *> handlers);
+    server(boost::asio::io_service& io_service, short port, std::vector<std::unique_ptr<http::handler> > handlers);
 
 private:
 
@@ -59,7 +58,7 @@ private:
 
     tcp::acceptor acceptor; // Used in boost.asio to take in new clients
     tcp::socket   socket;   // Used in boost.asio to represent clients
-    std::vector<http::handler *> handlers;
+    std::vector<std::unique_ptr<http::handler> > handlers; // Vector of request handlers, going to be used across multiple threads
 };
 
 #endif // SERVER_H

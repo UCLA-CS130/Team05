@@ -14,9 +14,8 @@ using boost::asio::ip::tcp;
 
 
 // Constructor
-session::session(tcp::socket sock, std::vector<http::handler *> handlers) :
-    socket(std::move(sock)) {
-        this->handlers = handlers;
+session::session(tcp::socket sock, const std::vector<std::unique_ptr<http::handler> > &handlers) :
+    socket(std::move(sock)), handlers(handlers) {
 
 }
 
@@ -43,10 +42,9 @@ void session::do_read() {
                     request, buf.data(), buf.data() + len);
                 if (rslt == http::request_parser::good) {
                     
-                    
                     std::string base_url = request.path.substr(0, request.path.find("/", 1)); 
 
-                    // look for correct handler with matching base urls
+                    // Look for correct handler with matching base urls
                     for (size_t i = 0; i < handlers.size(); i++) {
                         if (base_url == handlers[i]->base_url) {
                             do_write(handlers[i]->handle_request(request));
@@ -54,12 +52,8 @@ void session::do_read() {
                         }
                     }
 
-                    // if can't find match, return response not found
+                    // If can't find match, return response not found
                     do_write(http::response::default_response(http::response::not_found));
-
-    
-                    
-
 
                 } else if (rslt == http::request_parser::bad) {
                     do_write(http::response::default_response(
@@ -96,7 +90,7 @@ void session::do_write(const http::response& res) {
 
 
 // Constructor
-server::server(boost::asio::io_service& io_service, short port, std::vector<http::handler *> handlers) :
+server::server(boost::asio::io_service& io_service, short port, std::vector<std::unique_ptr<http::handler> > handlers) :
     acceptor(io_service, tcp::endpoint(tcp::v4(), port)), 
     socket(io_service) {
     // Start accepting clients as soon as the server instance is created

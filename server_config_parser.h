@@ -18,7 +18,8 @@ public:
     // Parses all server echo/static file request handlers and stores
     // the parsed handlers in vector out-param. Returns number of request 
     // handlers found
-    int parseRequestHandlers(std::vector<http::handler *>* handlers_out);
+    int parseRequestHandlers(std::vector<std::unique_ptr<http::handler> >* 
+                             handlers_out);
     // Parses all server settings and stores the parsed server setup
     // in server_config out-param. Returns port number (-1 if no number is
     // found)
@@ -27,10 +28,6 @@ private:
     NginxConfigParser config_parser; // Config parser to parse a file
     NginxConfig config;              // File's config contents after parsing
 };
-
-// Returns the port number from config_file or -1 if no number is found
-//   TODO: Put this in a class as a static method
-int port_number(const char* config_file);
 
 #endif // SERVER_CONFIG_PARSER_H
 

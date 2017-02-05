@@ -15,7 +15,7 @@ class handler_file : public handler {
 public:
 
     // Constructor used for choosing the root path for the handler
-    handler_file(const std::string& doc_root, std::string base_url);
+    handler_file(const std::string& doc_root, const std::string& base_url);
 
     // Responds with the file requested or an error page
     response handle_request(const request& req);
