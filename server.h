@@ -58,7 +58,7 @@ private:
 
     tcp::acceptor acceptor; // Used in boost.asio to take in new clients
     tcp::socket   socket;   // Used in boost.asio to represent clients
-    std::vector<http::handler *> handlers; // Vector fo request handlers
+    std::vector<http::handler *> handlers; // Vector of request handlers
 };
 
 #endif // SERVER_H
