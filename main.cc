@@ -17,28 +17,21 @@ int main(int argc, char* argv[]) {
             std::cerr << "Usage: webserver <config_file>" << std::endl;
             return 1;
         }
+	
+        // Parse the config file into statements and tokens
+        NginxServerConfigParser server_parser(argv[1]);
 
-        // Get the port number from the config file
-        int port = port_number(argv[1]);
+        // Get the server settings from the config file (i.e. port)
+        server_config server_settings;
+        int port = server_parser.parseServerSettings(&server_settings);
         if (port == -1) {
             std::cerr << "Missing port <number> in config file" << std::endl;
             return 1;
         }
 
-        
-        // TODO: replace this with info from the config parser
-             
+        // Parse the echo and static file request handlers from the config file
         std::vector<http::handler *> handlers;
-
-        http::handler_echo handler0("/echo");
-        http::handler_file handler1(".", "/static1");
-
-        handlers.push_back(&handler0);
-        handlers.push_back(&handler1);
-      
-
-       
-        
+        server_parser.parseRequestHandlers(&handlers);
 
         // Start the server
         boost::asio::io_service io_service;

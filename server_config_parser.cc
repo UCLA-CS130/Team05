@@ -12,7 +12,7 @@ NginxServerConfigParser::NginxServerConfigParser(const char* config_file) {
 // handlers in a vector out-param. Returns number of request handlers found
 int NginxServerConfigParser::parseRequestHandlers(
     std::vector<http::handler *>* handlers_out) {
-    /*
+    
     // Check config file for echo/static file requests to add
     for (size_t i = 0; i < config.statements.size(); i++) {
         // Add echo handler with its base URL
@@ -28,15 +28,13 @@ int NginxServerConfigParser::parseRequestHandlers(
     }
     
     return handlers_out->size();
-    */
-    return 1;
 }
 
 // Parses all server settings and stores the parsed server setup in 
 // server_config out-parm. Returns port number (-1 if no number is found)
-int NginxServerConfigParser::parseServerSettings(
-    server_config* server_setings_out) {
-    /*
+int NginxServerConfigParser::parseServerSettings(server_config* 
+    server_settings_out) {
+    
     server_settings_out->port = -1;
    
     for (size_t i = 0; i < config.statements.size(); i++) {
@@ -47,8 +45,6 @@ int NginxServerConfigParser::parseServerSettings(
     }
  
     return server_settings_out->port;
-    */
-    return 1;
 }
 
 // Returns the port number from config_file or -1 if no number is found
