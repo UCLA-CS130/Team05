@@ -6,7 +6,7 @@
 #include "http_handler_file.h"
 
 struct server_config {
-    int port;
+    short port;
     // TODO: Add in more server specific configurations here
 };
 

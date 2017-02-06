@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 
         // Get the server settings from the config file (i.e. port)
         server_config server_settings;
-        int port = server_parser.ParseServerSettings(server_settings);
+        short port = server_parser.ParseServerSettings(server_settings);
         if (port == -1) {
             std::cerr << "Missing port <number> in config file" << std::endl;
             return 1;
