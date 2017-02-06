@@ -52,7 +52,7 @@ class server  {
 public:
 
     // Constructor taking a list of HTTP request handlers
-    server(boost::asio::io_service& io_service, short port,
+    server(boost::asio::io_service& io_service, int port,
         const std::vector<std::unique_ptr<http::handler> >& hndlers);
 
 private:

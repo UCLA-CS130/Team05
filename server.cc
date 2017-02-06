@@ -91,7 +91,7 @@ void session::do_write(const http::response& res) {
 
 
 // Constructor taking a list of HTTP request handlers
-server::server(boost::asio::io_service& io_service, short port,
+server::server(boost::asio::io_service& io_service, int port,
 const std::vector<std::unique_ptr<http::handler> >& hndlers) :
 handlers(hndlers), acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
 socket(io_service) {

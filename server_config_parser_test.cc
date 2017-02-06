@@ -28,7 +28,7 @@ protected:
         return (port != -1);
     }
 
-    short port;
+    int port;
     server_config server_settings;
 
 };
