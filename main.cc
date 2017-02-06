@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
         // Parse the echo and static file request handlers from the config file
         std::vector<std::unique_ptr<http::handler> > handlers;
         server_parser.ParseRequestHandlers(handlers);
-        printf("%lu number of handlers\n", handlers.size());
+        printf("%u handlers parsed\n", handlers.size());
 
         // Start the server
         boost::asio::io_service io_service;
