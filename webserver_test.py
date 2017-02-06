@@ -5,7 +5,7 @@ import sys
 
 # The expected output from curl as a regular expression
 curl_output_expected = [
-    "GET /echo HTTP/1\\.0\r\n",
+    "GET /echo_url HTTP/1\\.0\r\n",
     "Host: localhost:\\d+\r\n",
     "User-Agent: curl/\\d+\\.\\d+\\.\\d+\r\n",
     "Accept: \\*/\\*\r\n"
@@ -18,7 +18,7 @@ ec = 0
 webserver = Popen(["./webserver", "port_config"], stdout=PIPE)
 
 # Query the web server using curl
-curl = Popen(["curl", "-0", "-s", "localhost:1234/echo"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "localhost:1234/echo_url"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
 sys.stdout.write("\nActual output from server\n")
 sys.stdout.write("==========\n")

@@ -15,7 +15,11 @@ protected:
         // Write the config_contents into the temp file
         write(fd, config_contents.c_str(), config_contents.size());
 
-        port = port_number(name);
+        // Initilize server parser
+        NginxServerConfigParser server_parser(name);
+      
+        // Get the port number
+        port = server_parser.ParseServerSettings(server_settings);
 
         // Delete the temporary file
         remove(name);
@@ -24,6 +28,8 @@ protected:
     }
 
     int port;
+    server_config server_settings;
+
 };
 
 

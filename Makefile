@@ -62,7 +62,7 @@ http_response_gcov: http_response_test
 	gcov -r http_response.cc > http_response_gcov.txt
 
 server_config_parser_test: test_setup server_config_parser.cc server_config_parser_test.cc
-	g++ $(GCOVFLAGS) $(TESTFLAGS) server_config_parser_test.cc server_config_parser.cc config_parser.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
+	g++ $(GCOVFLAGS) $(TESTFLAGS) server_config_parser_test.cc server_config_parser.cc config_parser.cc http_handler_file.cc http_handler_echo.cc http_response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
 	./$@
 
 server_config_parser_gcov: server_config_parser_test
