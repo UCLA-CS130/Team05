@@ -14,8 +14,10 @@ struct request;
 class handler {
 public:
 
+    // Construct handler with the base url such as "/echo" or "/static1"
     handler(const std::string& url) : base_url(url) { };
-    
+
+    // Virtual destructor necessary for deleting derived classes via base class
     virtual ~handler() {};    
 
     // Returns a response to the given request

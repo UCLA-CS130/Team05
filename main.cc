@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 
         // Get the server settings from the config file (i.e. port)
         server_config server_settings;
-        int port = server_parser.parseServerSettings(&server_settings);
+        int port = server_parser.ParseServerSettings(server_settings);
         if (port == -1) {
             std::cerr << "Missing port <number> in config file" << std::endl;
             return 1;
@@ -31,12 +31,12 @@ int main(int argc, char* argv[]) {
 
         // Parse the echo and static file request handlers from the config file
         std::vector<std::unique_ptr<http::handler> > handlers;
-        server_parser.parseRequestHandlers(&handlers);
-        printf("%d number of handlers\n", handlers.size());        
+        server_parser.ParseRequestHandlers(handlers);
+        printf("%lu number of handlers\n", handlers.size());
 
         // Start the server
         boost::asio::io_service io_service;
-        server s(io_service, port, handlers);
+        server s(io_service, port, std::move(handlers));
         printf("Running server on port %d...\n", port);
         io_service.run();
     } catch (std::exception& e) {

@@ -13,9 +13,10 @@
 using boost::asio::ip::tcp;
 
 
-// Constructor
-session::session(tcp::socket sock, const std::vector<std::unique_ptr<http::handler> > &handlers) :
-    socket(std::move(sock)), handlers(handlers) {
+// Constructor taking a list of HTTP request handlers
+session::session(tcp::socket sock,
+const std::vector<std::unique_ptr<http::handler> >& hndlers) :
+handlers(hndlers), socket(std::move(sock)) {
 
 }
 
@@ -89,12 +90,12 @@ void session::do_write(const http::response& res) {
 }
 
 
-// Constructor
-server::server(boost::asio::io_service& io_service, short port, std::vector<std::unique_ptr<http::handler> > handlers) :
-    acceptor(io_service, tcp::endpoint(tcp::v4(), port)), 
-    socket(io_service) {
+// Constructor taking a list of HTTP request handlers
+server::server(boost::asio::io_service& io_service, short port,
+const std::vector<std::unique_ptr<http::handler> >& hndlers) :
+handlers(hndlers), acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
+socket(io_service) {
     // Start accepting clients as soon as the server instance is created
-    this->handlers = handlers;
     do_accept();
 }
 
@@ -108,7 +109,7 @@ void server::do_accept()
             // Check if an error has occurred during the connection
             if (!ec) {
                 // No error : creates a session between the client and server
-                std::make_shared<session>(std::move(socket), this->handlers)->start();
+                std::make_shared<session>(std::move(socket), handlers)->start();
             }
 
             // Repeatedly do this
