@@ -1,2 +1,10 @@
 port 1234;
 
+echo /echo;
+
+echo /echo2;
+
+static_serve /static_serve ./;
+
+static_serve /static_serve_team ./;
+

@@ -19,8 +19,9 @@ using boost::asio::ip::tcp;
 class session : public std::enable_shared_from_this<session> {
 public:
 
-    // Constructor
-    session(tcp::socket sock, const std::vector<http::handler *>& handlers);
+    // Constructor taking a list of HTTP request handlers
+    session(tcp::socket sock,
+        const std::vector<std::unique_ptr<http::handler> >& hndlers);
 
     // Starts the session between client and server
     void start();
@@ -36,11 +37,13 @@ private:
     // Callback for when a client should be written to
     void do_write(const http::response& res);
 
+    // Reference to the vector of request handlers
+    const std::vector<std::unique_ptr<http::handler> >& handlers;
+
     std::array<char, max_length> buf; // Buffer used when reading client data
     http::request_parser parser;      // Parser for incoming client requests
     http::request        request;     // Structure for storing client requests
     tcp::socket          socket;      // Used to represent a client
-    const std::vector<http::handler *>& handlers; // Vector of request handlers
 };
 
 
@@ -48,17 +51,20 @@ private:
 class server  {
 public:
 
-    // Constructor
-    server(boost::asio::io_service& io_service, short port, std::vector<http::handler *> handlers);
+    // Constructor taking a list of HTTP request handlers
+    server(boost::asio::io_service& io_service, short port,
+        const std::vector<std::unique_ptr<http::handler> >& hndlers);
 
 private:
 
     // Callback for when a client attempts to connect
     void do_accept();
 
+    // Vector of request handlers - used across multiple sessions/threads
+    const std::vector<std::unique_ptr<http::handler> >& handlers;
+
     tcp::acceptor acceptor; // Used in boost.asio to take in new clients
     tcp::socket   socket;   // Used in boost.asio to represent clients
-    std::vector<http::handler *> handlers; // Vector of request handlers, going to be used across multiple threads
 };
 
 #endif // SERVER_H

@@ -40,6 +40,7 @@ static std::string extension_to_type(const std::string& extension) {
 
 // Constructor used for choosing the root path for the handler
 handler_file::handler_file(const std::string& doc_root, const std::string& base_url) : handler(base_url), root(doc_root) {
+
 }
 
 

@@ -15,6 +15,7 @@ class handler_echo : public handler {
 public:
 
     handler_echo(const std::string& base_url) : handler(base_url) {}; 
+
     // Echoes the request as plain text
     response handle_request(const request& req);
 };
