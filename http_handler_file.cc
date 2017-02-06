@@ -54,7 +54,7 @@ response handler_file::handle_request(const request& req) {
         extension = req.path.substr(last_dot_pos + 1);
     }
 
-    // the request's base url, skipping first 
+    // the request's base url, skipping first /
     std::string reqs_base_url = req.path.substr(0, req.path.find("/", 1));
 
     // If the base url's do not match, this handler should not have been called
