@@ -54,6 +54,14 @@ response handler_file::handle_request(const request& req) {
         extension = req.path.substr(last_dot_pos + 1);
     }
 
+    // the request's base url, skipping first 
+    std::string reqs_base_url = req.path.substr(0, req.path.find("/", 1));
+
+    // If the base url's do not match, this handler should not have been called
+    if (reqs_base_url != this->base_url) {
+        return response::default_response(response::internal_server_error);
+    }
+
     std::string file_path = req.path.substr(this->base_url.length());
 
     // For if base url is provided by user but nothing else
@@ -64,6 +72,8 @@ response handler_file::handle_request(const request& req) {
     // Open the file to send back
     std::string full_path = root + file_path;
     printf("|File path: %s|\n", full_path.c_str());
+    printf("|Extension Type: %s|\n", extension.c_str());
+    printf("|Extension Type: %s|\n", extension_to_type(extension).c_str());
 
     std::ifstream file(full_path.c_str(), std::ios::in | std::ios::binary);
     if (!file) {
@@ -82,6 +92,7 @@ response handler_file::handle_request(const request& req) {
     res.headers[0].value = std::to_string(res.content.size());
     res.headers[1].name = "Content-Type";
     res.headers[1].value = extension_to_type(extension);
+
     return res;
 }
 
