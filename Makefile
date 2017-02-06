@@ -2,7 +2,7 @@
 TARGET=webserver
 
 # Test executables
-TESTEXEC=config_parser_test server_config_parser_test http_response_test http_handler_file_test
+TESTEXEC=config_parser_test server_config_parser_test http_response_test http_handler_file_test http_handler_echo_test
 GCOVEXEC=config_parser_gcov server_config_parser_gcov http_response_gcov
 
 # GoogleTest directory and output files
@@ -70,6 +70,10 @@ server_config_parser_gcov: server_config_parser_test
 
 http_handler_file_test: test_setup http_handler_file.cc
 	g++ $(GCOVFLAGS) $(TESTFLAGS) http_handler_file_test.cc http_handler_file.cc http_request.h http_response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
+	./$@
+
+http_handler_echo_test: test_setup http_handler_echo.cc
+	g++ $(GCOVFLAGS) $(TESTFLAGS) http_handler_echo_test.cc http_handler_echo.cc http_request.h http_response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
 	./$@
 
 
