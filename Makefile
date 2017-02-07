@@ -44,7 +44,9 @@ test_setup:
 	g++ $(TESTFLAGS) -I${GTEST_DIR} -c ${GTEST_DIR}/src/gtest-all.cc
 	ar -rv libgtest.a gtest-all.o
 
-test: $(TARGET) $(TESTEXEC)
+test: $(TARGET) $(TESTEXEC) integration_test
+
+integration_test: $(TARGET)
 	python webserver_test.py
 
 config_parser_test: test_setup config_parser.cc config_parser_test.cc

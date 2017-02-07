@@ -21,7 +21,7 @@ std::vector<std::unique_ptr<http::handler> >& handlers_out) {
             handlers_out.push_back(std::move(std::unique_ptr<http::handler>(
                 new http::handler_echo(config.statements[i]->tokens[1]))));
         // Add static file with its root directory and base URL
-        } else if (config.statements[i]->tokens[0] == "static_serve") {
+        } else if (config.statements[i]->tokens[0] == "static") {
             handlers_out.push_back(std::move(std::unique_ptr<http::handler>(
                 new http::handler_file(config.statements[i]->tokens[2],
                                        config.statements[i]->tokens[1]))));

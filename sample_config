@@ -4,7 +4,7 @@ echo /echo;
 
 echo /echo2;
 
-static_serve /static_serve ./;
+static /static ./;
 
-static_serve /static_serve_team ./;
+static /static_team /home/wizzard/Desktop/Team05;
 

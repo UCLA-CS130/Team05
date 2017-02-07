@@ -79,6 +79,6 @@ TEST_F(HandlerParseTest, NoHandlersConfig) {
 }
 
 TEST_F(HandlerParseTest, SomeHandlersConfig) {
-    ASSERT_TRUE(getNumberOfHandlersParsed("echo /echo;\nstatic_serve /static_serve ./;"));
+    ASSERT_TRUE(getNumberOfHandlersParsed("echo /echo;\nstatic /static ./;"));
     EXPECT_EQ(num_parsed_handlers, 2);
 }
