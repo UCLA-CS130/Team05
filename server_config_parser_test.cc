@@ -89,7 +89,7 @@ TEST_F(HandlerParseTest, ImproperEchoHandlerConfig) {
 }
 
 TEST_F(HandlerParseTest, ImproperStaticHandlerConfig) {
-    ASSERT_FALSE(GetNumberOfHandlersParsed("static ;\nstatic static /"));
+    ASSERT_FALSE(GetNumberOfHandlersParsed("static ;\nstatic static /;"));
     EXPECT_EQ(num_parsed_handlers, 0);
 }
 

@@ -14,12 +14,16 @@ NginxServerConfigParser::NginxServerConfigParser(const char* config_file) {
 // handlers in a vector out-param. Returns number of request handlers found
 int NginxServerConfigParser::ParseRequestHandlers(
 std::vector<std::unique_ptr<http::handler> >& handlers_out) {
+    // Echo and static handler statement size constants
+    const int ECHO_STATEMENT_SIZE = 2;
+    const int STATIC_STATEMENT_SIZE = 3;
+
     // Check config file for echo/static file requests to add
     for (size_t i = 0; i < config.statements.size(); i++) {
         // Add echo handler with its base URL
         if (config.statements[i]->tokens[0] == "echo") {
             // Form should be: echo /base_url
-            if (config.statements[i]->tokens.size() == 2 && 
+            if (config.statements[i]->tokens.size() == ECHO_STATEMENT_SIZE && 
                 config.statements[i]->tokens[1][0] == '/') {
                 handlers_out.push_back(std::move(std::unique_ptr<http::handler>(
                     new http::handler_echo(config.statements[i]->tokens[1]))));
@@ -27,7 +31,7 @@ std::vector<std::unique_ptr<http::handler> >& handlers_out) {
         // Add static file with its root directory and base URL
         } else if (config.statements[i]->tokens[0] == "static") {
             // Form should be: static /base_url root_directory/
-            if (config.statements[i]->tokens.size() == 3 &&
+            if (config.statements[i]->tokens.size() == STATIC_STATEMENT_SIZE &&
                 config.statements[i]->tokens[1][0] == '/') {
                 handlers_out.push_back(std::move(std::unique_ptr<http::handler>(
                     new http::handler_file(config.statements[i]->tokens[2],
