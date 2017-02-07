@@ -13,13 +13,12 @@ protected:
     }
     
     http::request r;
-   
 
 };
 
 TEST_F(HttpHandlerFileTest, FileExists) {
 
-	int fd;
+    int fd;
     char name[] = "/tmp/fileXXXXXX";
 
 
@@ -45,16 +44,16 @@ TEST_F(HttpHandlerFileTest, FileExists) {
     EXPECT_EQ("Content-Length", res.headers[0].name);
     EXPECT_EQ(std::to_string(text_contents.size()), res.headers[0].value);
     EXPECT_EQ("Content-Type", res.headers[1].name);
-	EXPECT_EQ("text/plain", res.headers[1].value);
-	EXPECT_EQ(text_contents, res.content);
-	EXPECT_EQ(http::response::status_code::ok, res.status);
+    EXPECT_EQ("text/plain", res.headers[1].value);
+    EXPECT_EQ(text_contents, res.content);
+    EXPECT_EQ(http::response::status_code::ok, res.status);
 
-	
+    
 }
 
 TEST_F(HttpHandlerFileTest, WrongHandlerCalled) {
 
-	int fd;
+    int fd;
     char name[] = "/tmp/fileXXXXXX";
 
 
@@ -78,8 +77,8 @@ TEST_F(HttpHandlerFileTest, WrongHandlerCalled) {
     EXPECT_EQ("Content-Length", res.headers[0].name);
     EXPECT_EQ("Content-Type", res.headers[1].name);
     EXPECT_EQ("text/html", res.headers[1].value);
-	EXPECT_EQ(http::response::status_code::internal_server_error, res.status);
-	
+    EXPECT_EQ(http::response::status_code::internal_server_error, res.status);
+    
 }
 
 
@@ -94,7 +93,7 @@ TEST_F(HttpHandlerFileTest, NoFileAskedFor) {
 
     EXPECT_EQ("Content-Length", res.headers[0].name);
     EXPECT_EQ("Content-Type", res.headers[1].name);
-	EXPECT_EQ(http::response::status_code::not_found, res.status);
+    EXPECT_EQ(http::response::status_code::not_found, res.status);
 
 }
 
@@ -110,7 +109,7 @@ TEST_F(HttpHandlerFileTest, FileDoesNotExit) {
 
     EXPECT_EQ("Content-Length", res.headers[0].name);
     EXPECT_EQ("Content-Type", res.headers[1].name);
-	EXPECT_EQ(http::response::status_code::not_found, res.status);
+    EXPECT_EQ(http::response::status_code::not_found, res.status);
 
 }
 

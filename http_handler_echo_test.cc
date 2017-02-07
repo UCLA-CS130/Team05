@@ -13,14 +13,13 @@ protected:
     }
     
     http::request r;
-   
 
 };
 
 
 TEST_F(HttpHandlerEchoTest, SimpleEcho) {
 
-	
+    
     http::handler_echo hf("/echo");
     form_request("/echo/Makefile");
 
@@ -31,12 +30,8 @@ TEST_F(HttpHandlerEchoTest, SimpleEcho) {
     EXPECT_EQ(res1.headers[0].name, res1.headers[0].name);
     EXPECT_EQ(res2.headers[0].value, res1.headers[0].value);
     EXPECT_EQ(res2.headers[1].name, res1.headers[1].name);
-	EXPECT_EQ(res2.headers[1].value, res1.headers[1].value);
-	EXPECT_EQ(res2.content, res1.content);
-	EXPECT_EQ(res2.status, res1.status);
-
-
+    EXPECT_EQ(res2.headers[1].value, res1.headers[1].value);
+    EXPECT_EQ(res2.content, res1.content);
+    EXPECT_EQ(res2.status, res1.status);
     
-
-	
 }
