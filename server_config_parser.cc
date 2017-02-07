@@ -18,13 +18,21 @@ std::vector<std::unique_ptr<http::handler> >& handlers_out) {
     for (size_t i = 0; i < config.statements.size(); i++) {
         // Add echo handler with its base URL
         if (config.statements[i]->tokens[0] == "echo") {
-            handlers_out.push_back(std::move(std::unique_ptr<http::handler>(
-                new http::handler_echo(config.statements[i]->tokens[1]))));
+            // Form should be: echo /base_url
+            if (config.statements[i]->tokens.size() == 2 && 
+                config.statements[i]->tokens[1][0] == '/') {
+                handlers_out.push_back(std::move(std::unique_ptr<http::handler>(
+                    new http::handler_echo(config.statements[i]->tokens[1]))));
+            }
         // Add static file with its root directory and base URL
         } else if (config.statements[i]->tokens[0] == "static") {
-            handlers_out.push_back(std::move(std::unique_ptr<http::handler>(
-                new http::handler_file(config.statements[i]->tokens[2],
-                                       config.statements[i]->tokens[1]))));
+            // Form should be: static /base_url root_directory/
+            if (config.statements[i]->tokens.size() == 3 &&
+                config.statements[i]->tokens[1][0] == '/') {
+                handlers_out.push_back(std::move(std::unique_ptr<http::handler>(
+                    new http::handler_file(config.statements[i]->tokens[2],
+                                           config.statements[i]->tokens[1]))));
+            }
         }
     }
 
