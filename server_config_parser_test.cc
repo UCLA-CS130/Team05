@@ -6,7 +6,7 @@ class PortParseTest : public ::testing::Test {
 protected:
     // Test to check if server parser can read in port correctly
     // Returns true if the port is not -1
-    bool getPortNumber(std::string config_contents) {
+    bool GetPortNumber(std::string config_contents) {
         int fd;
         char name[] = "/tmp/fileXXXXXX";
 
@@ -35,20 +35,20 @@ protected:
 
 
 TEST_F(PortParseTest, ValidPortConfig) {
-    ASSERT_TRUE(getPortNumber("port 80800;"));
+    ASSERT_TRUE(GetPortNumber("port 80800;"));
     EXPECT_EQ(80800, port);
 }
 
 
 TEST_F(PortParseTest, InvalidPortConfig) {
-    EXPECT_FALSE(getPortNumber("Port 80800;"));
+    EXPECT_FALSE(GetPortNumber("Port 80800;"));
 }
 
 class HandlerParseTest : public ::testing::Test {
 protected:
     // Test to check the number of handlers parsed from config file
     // Returns true iff at least one handler is parsed
-    bool getNumberOfHandlersParsed(std::string config_contents) {
+    bool GetNumberOfHandlersParsed(std::string config_contents) {
         int fd;
         char name[] = "/tmp/fileXXXXXX";
 
@@ -74,11 +74,22 @@ protected:
 };
 
 TEST_F(HandlerParseTest, NoHandlersConfig) {
-    ASSERT_FALSE(getNumberOfHandlersParsed("no /handlers;"));
+    ASSERT_FALSE(GetNumberOfHandlersParsed("no /handlers;"));
     EXPECT_EQ(num_parsed_handlers, 0);
 }
 
 TEST_F(HandlerParseTest, SomeHandlersConfig) {
-    ASSERT_TRUE(getNumberOfHandlersParsed("echo /echo;\nstatic /static ./;"));
+    ASSERT_TRUE(GetNumberOfHandlersParsed("echo /echo;\nstatic /static ./;"));
     EXPECT_EQ(num_parsed_handlers, 2);
 }
+
+TEST_F(HandlerParseTest, ImproperEchoHandlerConfig) {
+    ASSERT_FALSE(GetNumberOfHandlersParsed("echo ;\n echo echo;"));
+    EXPECT_EQ(num_parsed_handlers, 0);
+}
+
+TEST_F(HandlerParseTest, ImproperStaticHandlerConfig) {
+    ASSERT_FALSE(GetNumberOfHandlersParsed("static ;\nstatic static /;"));
+    EXPECT_EQ(num_parsed_handlers, 0);
+}
+
