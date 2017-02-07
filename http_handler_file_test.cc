@@ -113,6 +113,22 @@ TEST_F(HttpHandlerFileTest, FileDoesNotExit) {
 
 }
 
+TEST_F(HttpHandlerFileTest, InvalidBaseUrl) {
+
+    form_request("");
+    http::handler_file hf("/", "/static1");
+
+    http::response res = hf.handle_request(r);
+
+    EXPECT_EQ(http::response::status_code::internal_server_error, res.status);
+
+    form_request("Makefile");
+
+    res = hf.handle_request(r);
+    EXPECT_EQ(http::response::status_code::internal_server_error, res.status);
+
+}
+
 
 
 

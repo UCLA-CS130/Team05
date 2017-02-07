@@ -46,6 +46,11 @@ handler_file::handler_file(const std::string& doc_root, const std::string& base_
 
 // Responds with the file requested or an error page
 response handler_file::handle_request(const request& req) {
+    // If base url is  not formatted correctly
+    if (req.path.length() == 0 || req.path[0] != '/') {
+        return response::default_response(response::internal_server_error);
+    }
+
     // Determine the file extension
     std::size_t last_slash_pos = req.path.find_last_of("/");
     std::size_t last_dot_pos = req.path.find_last_of(".");
