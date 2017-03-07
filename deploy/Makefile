@@ -110,11 +110,3 @@ reverse_proxy_handler_test: test_setup reverse_proxy_handler.cc reverse_proxy_ha
 
 reverse_proxy_handler_gcov: reverse_proxy_handler_test
 	gcov -r reverse_proxy_handler.cc > reverse_proxy_handler_gcov.txt
-
-docker: 
-	docker build -t httpserver.build .
-	docker run httpserver.build > binary.tar
-	cp binary.tar deploy/binary.tar 
-	cp example_config deploy/example_config
-	tar -xvf deploy/binary.tar -C deploy/
-	docker build -t httpserver deploy

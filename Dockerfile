@@ -6,5 +6,4 @@ RUN apt-get install -y g++
 WORKDIR /opt/webserver
 COPY . /opt/webserver
 RUN make clean && make
-EXPOSE 2020:2020
-CMD ["./webserver", "example_config"]
+CMD tar -cf - webserver

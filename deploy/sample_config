@@ -1,0 +1,10 @@
+port 1234;
+
+echo /echo;
+
+echo /echo2;
+
+static /static ./;
+
+static /static_team /home/wizzard/Desktop/Team05;
+
