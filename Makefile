@@ -32,7 +32,7 @@ server_config_parser.cc request.cc echo_handler.cc \
 static_file_handler.cc request_handler.cc \
 not_found_handler.cc status_handler.cc reverse_proxy_handler.cc
 
-.PHONY: clean clean_target gcov test test_gcov test_setup
+.PHONY: clean clean_target gcov test test_gcov test_setup deploy docker
 
 $(TARGET): clean_target
 	$(CXX) -o $@ main.cc $(SRC) $(CXXFLAGS) $(LDFLAGS)
@@ -118,3 +118,7 @@ docker:
 	cp example_config deploy/example_config
 	tar -xvf deploy/binary.tar -C deploy/
 	docker build -t httpserver deploy
+
+deploy: 
+	./deploy.sh
+
