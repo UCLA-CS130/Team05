@@ -44,7 +44,12 @@ more information.
 
 Once you are all done with making your handler, you can use it by running the  
 server with a config file that gives your handler a path. Please see  
-example_config for an example on how to do that.
+example_config for an example on how to do that.  
+
+In order to build a compressed image of the server using docker, use the "make  
+docker" command. This shrunken image is intended to be used to run the  
+webserver on cloud hosts such as Amazon Web Services. Docker must be installed  
+prior to making or using the image.
 
 ## Multithreading  
 The server begins with a single thread that accepts TCP connections. Any time  
