@@ -55,6 +55,12 @@ which shrinks the image, transfers the file to the AWS instance, kills
 the old server process, and starts a new server with the updated  
 docker image.
 
+One can check out our AWS web server instance running at the following link:  
+54.213.82.160:2020 (type into the browser and add requests like /echo)   
+
+Side note: In order to properly SSH and run "make deploy", one must have the  
+"team05-pk.pem" file from AWS in the same directory as the Makefile.   
+
 ## Multithreading  
 The server begins with a single thread that accepts TCP connections. Any time  
 a connection is accepted, the server creates a new thread for that connection.  
