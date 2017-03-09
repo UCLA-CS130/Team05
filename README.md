@@ -44,7 +44,22 @@ more information.
 
 Once you are all done with making your handler, you can use it by running the  
 server with a config file that gives your handler a path. Please see  
-example_config for an example on how to do that.
+example_config for an example on how to do that.  
+
+In order to build a compressed image of the server using docker, use the "make  
+docker" command. This shrunken image is intended to be used to run the  
+webserver on cloud hosts such as Amazon Web Services. Docker must be installed  
+prior to making or using the image. In addition, in order to deploy  
+your most recent docker image to the AWS instance, run "make deploy",  
+which saves the image, transfers the file to the AWS instance, kills  
+the old server process, and starts a new server with the updated  
+docker image.
+
+One can check out our AWS web server instance running at the following link:  
+54.213.82.160:2020 (type into the browser and add requests like /echo)   
+
+Side note: In order to properly SSH and run "make deploy", one must have the  
+"team05-pk.pem" file from AWS in the same directory as the Makefile.   
 
 ## Multithreading  
 The server begins with a single thread that accepts TCP connections. Any time  

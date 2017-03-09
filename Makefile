@@ -18,7 +18,7 @@ GCOVFILES=*.gcno *.gcda *.gcov
 CXXFLAGS+=-std=c++11 -pthread -Wall -Werror
 
 # Linker flags
-LDFLAGS+=-lboost_system -pthread
+LDFLAGS+= -static-libgcc -static-libstdc++ -pthread -Wl,-Bstatic -lboost_system 
 
 # Test flags
 TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread
@@ -32,7 +32,7 @@ server_config_parser.cc request.cc echo_handler.cc \
 static_file_handler.cc request_handler.cc \
 not_found_handler.cc status_handler.cc reverse_proxy_handler.cc
 
-.PHONY: clean clean_target gcov test test_gcov test_setup
+.PHONY: clean clean_target gcov test test_gcov test_setup deploy docker
 
 $(TARGET): clean_target
 	$(CXX) -o $@ main.cc $(SRC) $(CXXFLAGS) $(LDFLAGS)
@@ -110,3 +110,15 @@ reverse_proxy_handler_test: test_setup reverse_proxy_handler.cc reverse_proxy_ha
 
 reverse_proxy_handler_gcov: reverse_proxy_handler_test
 	gcov -r reverse_proxy_handler.cc > reverse_proxy_handler_gcov.txt
+
+docker: 
+	docker build -t httpserver.build .
+	docker run httpserver.build > binary.tar
+	cp binary.tar deploy/binary.tar 
+	cp example_config deploy/example_config
+	tar -xvf deploy/binary.tar -C deploy/
+	docker build -t httpserver deploy
+
+deploy: 
+	./deploy.sh
+
