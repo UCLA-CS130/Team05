@@ -51,7 +51,7 @@ docker" command. This shrunken image is intended to be used to run the
 webserver on cloud hosts such as Amazon Web Services. Docker must be installed  
 prior to making or using the image. In addition, in order to deploy  
 your most recent docker image to the AWS instance, run "make deploy",  
-which shrinks the image, transfers the file to the AWS instance, kills  
+which saves the image, transfers the file to the AWS instance, kills  
 the old server process, and starts a new server with the updated  
 docker image.
 
