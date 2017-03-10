@@ -15,10 +15,11 @@ GCOVFLAGS=-fprofile-arcs -ftest-coverage
 GCOVFILES=*.gcno *.gcda *.gcov
 
 # Compiler flags
-CXXFLAGS+=-std=c++11 -pthread -Wall -Werror
+CXXFLAGS+=-std=c++11 -pthread -Wall -Werror -ILuaJIT-2.0.4/src
 
 # Linker flags
-LDFLAGS+= -static-libgcc -static-libstdc++ -pthread -Wl,-Bstatic -lboost_system 
+LDFLAGS+= -static-libgcc -static-libstdc++ -pthread -Wl,-Bstatic \
+-lboost_system -L./ -lluajit
 
 # Test flags
 TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread
@@ -34,8 +35,13 @@ not_found_handler.cc status_handler.cc reverse_proxy_handler.cc
 
 .PHONY: clean clean_target gcov test test_gcov test_setup deploy docker
 
-$(TARGET): clean_target
+$(TARGET): clean_target lua
 	$(CXX) -o $@ main.cc $(SRC) $(CXXFLAGS) $(LDFLAGS)
+
+lua:
+	cd LuaJIT-2.0.4 && make
+	cp LuaJIT-2.0.4/src/libluajit.a ./
+	cp LuaJIT-2.0.4/src/libluajit.so ./
 
 clean_target:
 	$(RM) $(TARGET)

@@ -1,2 +1,5 @@
 webserver
 *.pem
+LuaJIT-2.0.4/
+libluajit.a
+libluajit.so
