@@ -15,14 +15,15 @@ GCOVFLAGS=-fprofile-arcs -ftest-coverage
 GCOVFILES=*.gcno *.gcda *.gcov
 
 # Compiler flags
-CXXFLAGS+=-std=c++11 -pthread -Wall -Werror -ILuaJIT-2.0.4/src
+CXXFLAGS+=-std=c++11 -pthread -Wall -Werror -ILuaJIT-2.0.4/include/luajit-2.0
 
 # Linker flags
-LDFLAGS+= -static-libgcc -static-libstdc++ -pthread -Wl,-Bstatic \
--lboost_system -L./ -lluajit
+LDFLAGS+=-pthread -lboost_system -L./LuaJIT-2.0.4/src -lluajit \
+-Wl,-rpath '-Wl,$$ORIGIN'
 
 # Test flags
-TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread
+TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread \
+-ILuaJIT-2.0.4/include/luajit-2.0
 
 # Test files, e.g., downloaded files from integration tests
 TEST_FILES=proxy_bunny
@@ -39,9 +40,9 @@ $(TARGET): clean_target lua
 	$(CXX) -o $@ main.cc $(SRC) $(CXXFLAGS) $(LDFLAGS)
 
 lua:
-	cd LuaJIT-2.0.4 && make
-	cp LuaJIT-2.0.4/src/libluajit.a ./
-	cp LuaJIT-2.0.4/src/libluajit.so ./
+	cd LuaJIT-2.0.4 && make install PREFIX=$(shell cd LuaJIT-2.0.4 && pwd)
+	cp LuaJIT-2.0.4/lib/libluajit-5.1.so.2 .
+	cp LuaJIT-2.0.4/lib/libluajit-5.1.so.2.0.4 .
 
 clean_target:
 	$(RM) $(TARGET)
