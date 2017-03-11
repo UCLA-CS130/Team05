@@ -1,4 +1,4 @@
-// This file is based on the Boost HTTP server example at
+// Part of this file is based on the Boost HTTP server example at
 //  http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/examples/cpp11_examples.html
 
 #include <fstream>
@@ -8,10 +8,162 @@
 #include "lua.hpp"
 
 
+// Structure for mapping extensions to content types
+struct mapping {
+    const char* extension;
+    const char* content_type;
+};
+
+
+// The actual mappings defined for the webserver
+static mapping mappings[] = {
+    { "gif", "image/gif" },
+    { "htm", "text/html" },
+    { "html", "text/html" },
+    { "jpg", "image/jpeg" },
+    { "png", "image/png" }
+};
+
+
+// Convert a file extension into a content type
+static std::string extension_to_type(const std::string& extension) {
+    for (mapping m: mappings) {
+        if (m.extension == extension) {
+            return m.content_type;
+        }
+    }
+    return "text/plain";
+}
+
+
+// Lua function that gets the raw request
+static int lua_rawrequest(lua_State* L) {
+    lua_pushstring(L, "request");
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    Request* req = (Request*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    lua_pushstring(L, req->raw_request().c_str());
+    return 1;
+}
+
+
+// Lua function that gets the request method
+static int lua_method(lua_State* L) {
+    lua_pushstring(L, "request");
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    Request* req = (Request*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    lua_pushstring(L, req->method().c_str());
+    return 1;
+}
+
+
+// Lua function that gets the request URI
+static int lua_uri(lua_State* L) {
+    lua_pushstring(L, "request");
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    Request* req = (Request*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    lua_pushstring(L, req->uri().c_str());
+    return 1;
+}
+
+
+// Lua function that gets the request path
+static int lua_path(lua_State* L) {
+    lua_pushstring(L, "request");
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    Request* req = (Request*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    lua_pushstring(L, req->path().c_str());
+    return 1;
+}
+
+
+// Lua function that gets the request version
+static int lua_version(lua_State* L) {
+    lua_pushstring(L, "request");
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    Request* req = (Request*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    lua_pushstring(L, req->version().c_str());
+    return 1;
+}
+
+
+// Lua function that gets the request headers as a Lua table
+static int lua_headers(lua_State* L) {
+    lua_pushstring(L, "request");
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    Request* req = (Request*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    using Headers = std::vector<std::pair<std::string, std::string> >;
+    Headers headers = req->headers();
+    lua_createtable(L, 0, headers.size());
+    for (auto it = headers.begin(); it != headers.end(); it++) {
+        lua_pushstring(L, it->first.c_str());
+        lua_pushstring(L, it->second.c_str());
+        lua_rawset(L, -3);
+    }
+    return 1;
+}
+
+
+// Lua function that gets the request body
+static int lua_body(lua_State* L) {
+    lua_pushstring(L, "request");
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    Request* req = (Request*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    lua_pushstring(L, req->body().c_str());
+    return 1;
+}
+
+
+// Lua function that adds a header to the response
+static int lua_addheader(lua_State* L) {
+    lua_pushstring(L, "response");
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    Response* res = (Response*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    res->AddHeader(luaL_checkstring(L, 1), luaL_checkstring(L, 2));
+    return 0;
+}
+
+
+// Lua function that sets the status of the response
+static int lua_setstatus(lua_State* L) {
+    lua_pushstring(L, "response");
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    Response* res = (Response*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    int arg = luaL_checkint(L, 1);
+    if ((arg >= 200 && arg <= 204) || arg == 301 || arg == 302 || arg == 304 ||
+        arg == 400 || arg == 401 || arg == 403 || arg == 404 ||
+        (arg >= 500 && arg <= 503)) {
+        res->SetStatus((Response::ResponseCode)arg);
+    } else {
+        luaL_argerror(L, 1, "must be a valid status code");
+    }
+    return 0;
+}
+
+
+// Lua function that adds the given string to the body of the response
+static int lua_put(lua_State* L) {
+    lua_pushstring(L, "response_body");
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    std::string* body = (std::string*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    *body += luaL_checkstring(L, 1);
+    return 0;
+}
+
+
 // State used when parsing HTML files for Lua scripts
 enum state {
-    _start,
     _start_ignore_immediate_newline,
+    _start,
     _expecting_question_mark,
     _expecting_l,
     _expecting_u,
@@ -22,6 +174,8 @@ enum state {
     _expecting_space_2_2,
     _chunk,
     _chunk_2,
+    _chunk_whitespace,
+    _chunk_whitespace_2,
     _chunk_single_quote,
     _chunk_single_quote_2,
     _chunk_single_quote_escape,
@@ -34,6 +188,8 @@ enum state {
     _chunk_question_mark_2,
     _expression,
     _expression_2,
+    _expression_whitespace,
+    _expression_whitespace_2,
     _expression_single_quote,
     _expression_single_quote_2,
     _expression_single_quote_escape,
@@ -48,34 +204,42 @@ enum state {
 
 
 // Read through file character-by-character processing Lua scripts into body
-static void do_lua(std::ifstream& file, std::string& body) {
-    // Open an instance of the Lua virtual machine
-    lua_State* L = lua_open();
-    luaL_openlibs(L);
-
-    // Go through the file character by character
+static void do_lua(std::ifstream& file, const Request& request,
+Response* response, std::string& body) {
+    // Go through the file character by character building the Lua script
     char c;
-    std::string lua;
+    std::string lua = "put([[";
+    bool next = true;
     state s = _start;
-    while (file.get(c)) {
-        // Look for different characters based on what state were in
+    while (true) {
+        // Only move on to the next character if we're supposed to
+        if (next) {
+            // If we can't read characters anymore, then we're done looping
+            if (!file.get(c)) {
+                break;
+            }
+        }
+
+        // By default, we'll keep moving on to the next character
+        next = true;
+
+        // Build the Lua script using our state machine
         switch (s) {
+        case _start_ignore_immediate_newline: {
+            s = _start;
+            if (c == '\n') {
+                lua += c;
+                break;
+            }
+        }
         case _start: {
             if (c == '<') {
                 s = _expecting_question_mark;
+            } else if (c == '[' || c == ']') {
+                lua += '\\';
+                lua += c;
             } else {
-                body += c;
-            }
-            break;
-        }
-        case _start_ignore_immediate_newline: {
-            if (c == '<') {
-                s = _expecting_question_mark;
-            } else if (c == '\n') {
-                s = _start;
-            } else {
-                s = _start;
-                body += c;
+                lua += c;
             }
             break;
         }
@@ -86,8 +250,8 @@ static void do_lua(std::ifstream& file, std::string& body) {
                 s = _expecting_space_1_2;
             } else {
                 s = _start;
-                body += '<';
-                body += c;
+                lua += '<';
+                next = false;
             }
             break;
         }
@@ -96,8 +260,8 @@ static void do_lua(std::ifstream& file, std::string& body) {
                 s = _expecting_u;
             } else {
                 s = _start;
-                body += "<?";
-                body += c;
+                lua += "<?";
+                next = false;
             }
             break;
         }
@@ -106,8 +270,8 @@ static void do_lua(std::ifstream& file, std::string& body) {
                 s = _expecting_a;
             } else {
                 s = _start;
-                body += "<?l";
-                body += c;
+                lua += "<?l";
+                next = false;
             }
             break;
         }
@@ -116,54 +280,62 @@ static void do_lua(std::ifstream& file, std::string& body) {
                 s = _expecting_space_1;
             } else {
                 s = _start;
-                body += "<?lu";
-                body += c;
+                lua += "<?lu";
+                next = false;
             }
             break;
         }
         case _expecting_space_1: {
             if (c == ' ' || c == '\n') {
                 s = _chunk;
+                lua += "]])";
+                lua += c;
             } else if (c == '=') {
                 s = _expecting_space_2;
             } else {
                 s = _start;
-                body += "<?lua";
-                body += c;
+                lua += "<?lua";
+                next = false;
             }
             break;
         }
         case _expecting_space_1_2: {
             if (c == ' ' || c == '\n') {
                 s = _chunk_2;
+                lua += "]])";
+                lua += c;
             } else if (c == '=') {
                 s = _expecting_space_2_2;
             } else {
                 s = _start;
-                body += "<%";
-                body += c;
+                lua += "<%";
+                next = false;
             }
             break;
         }
         case _expecting_space_2: {
             if (c == ' ' || c == '\n') {
                 s = _expression;
-                lua += "return ";
+                lua += "]])";
+                lua += c;
+                lua += "put(";
             } else {
                 s = _start;
-                body += "<lua=";
-                body += c;
+                lua += "<lua=";
+                next = false;
             }
             break;
         }
         case _expecting_space_2_2: {
             if (c == ' ' || c == '\n') {
                 s = _expression_2;
-                lua += "return ";
+                lua += "]])";
+                lua += c;
+                lua += "put(";
             } else {
                 s = _start;
-                body += "<%=";
-                body += c;
+                lua += "<%=";
+                next = false;
             }
             break;
         }
@@ -172,9 +344,8 @@ static void do_lua(std::ifstream& file, std::string& body) {
                 s = _chunk_single_quote;
             } else if (c == '"') {
                 s = _chunk_double_quote;
-            } else if (c == '?') {
-                s = _chunk_question_mark;
-                break;
+            } else if (c == ' ' || c == '\n') {
+                s = _chunk_whitespace;
             }
             lua += c;
             break;
@@ -184,11 +355,32 @@ static void do_lua(std::ifstream& file, std::string& body) {
                 s = _chunk_single_quote_2;
             } else if (c == '"') {
                 s = _chunk_double_quote_2;
-            } else if (c == '%') {
-                s = _chunk_question_mark_2;
-                break;
+            } else if (c == ' ' || c == '\n') {
+                s = _chunk_whitespace_2;
             }
             lua += c;
+            break;
+        }
+        case _chunk_whitespace: {
+            if (c == '?') {
+                s = _chunk_question_mark;
+            } else if (c == ' ' || c == '\n') {
+                lua += c;
+            } else {
+                s = _chunk;
+                next = false;
+            }
+            break;
+        }
+        case _chunk_whitespace_2: {
+            if (c == '%') {
+                s = _chunk_question_mark_2;
+            } else if (c == ' ' || c == '\n') {
+                lua += c;
+            } else {
+                s = _chunk_2;
+                next = false;
+            }
             break;
         }
         case _chunk_single_quote: {
@@ -250,38 +442,22 @@ static void do_lua(std::ifstream& file, std::string& body) {
         case _chunk_question_mark: {
             if (c == '>') {
                 s = _start_ignore_immediate_newline;
-
-                // Run the Lua chunk and prepare to receive another one
-                if ((luaL_loadstring(L, lua.c_str()) ||
-                     lua_pcall(L, 0, 0, 0)) != 0) {
-                    // A Lua error has occurred
-                    printf("%s\n", lua_tostring(L, -1));
-                    lua_pop(L, 1); // Prevent memory leak
-                }
-                lua.clear();
+                lua += "put([[";
             } else {
                 s = _chunk;
                 lua += '?';
-                lua += c;
+                next = false;
             }
             break;
         }
         case _chunk_question_mark_2: {
             if (c == '>') {
                 s = _start_ignore_immediate_newline;
-
-                // Run the Lua chunk and prepare to receive another one
-                if ((luaL_loadstring(L, lua.c_str()) ||
-                     lua_pcall(L, 0, 0, 0)) != 0) {
-                    // A Lua error has occurred
-                    printf("%s\n", lua_tostring(L, -1));
-                    lua_pop(L, 1); // Prevent memory leak
-                }
-                lua.clear();
+                lua += "put([[";
             } else {
                 s = _chunk_2;
                 lua += '%';
-                lua += c;
+                next = false;
             }
             break;
         }
@@ -290,9 +466,8 @@ static void do_lua(std::ifstream& file, std::string& body) {
                 s = _expression_single_quote;
             } else if (c == '"') {
                 s = _expression_double_quote;
-            } else if (c == '?') {
-                s = _expression_question_mark;
-                break;
+            } else if (c == ' ' || c == '\n') {
+                s = _expression_whitespace;
             }
             lua += c;
             break;
@@ -302,11 +477,32 @@ static void do_lua(std::ifstream& file, std::string& body) {
                 s = _expression_single_quote_2;
             } else if (c == '"') {
                 s = _expression_double_quote_2;
-            } else if (c == '%') {
-                s = _expression_question_mark_2;
-                break;
+            } else if (c == ' ' || c == '\n') {
+                s = _expression_whitespace_2;
             }
             lua += c;
+            break;
+        }
+        case _expression_whitespace: {
+            if (c == '?') {
+                s = _expression_question_mark;
+            } else if (c == ' ' || c == '\n') {
+                lua += c;
+            } else {
+                s = _expression;
+                next = false;
+            }
+            break;
+        }
+        case _expression_whitespace_2: {
+            if (c == '%') {
+                s = _expression_question_mark_2;
+            } else if (c == ' ' || c == '\n') {
+                lua += c;
+            } else {
+                s = _expression_2;
+                next = false;
+            }
             break;
         }
         case _expression_single_quote: {
@@ -368,42 +564,24 @@ static void do_lua(std::ifstream& file, std::string& body) {
         case _expression_question_mark: {
             if (c == '>') {
                 s = _start_ignore_immediate_newline;
-
-                // Add the expression result to the HTML body
-                if ((luaL_loadstring(L, lua.c_str()) ||
-                     lua_pcall(L, 0, 1, 0)) != 0) {
-                    // A Lua error has occurred
-                    printf("%s\n", lua_tostring(L, -1));
-                } else if (lua_isstring(L, -1)) {
-                    body += lua_tostring(L, -1);
-                }
-                lua_pop(L, 1); // Prevent memory leak
-                lua.clear();
+                lua.insert(lua.end() - 1, ')');
+                lua += "put([[";
             } else {
                 s = _expression;
                 lua += '?';
-                lua += c;
+                next = false;
             }
             break;
         }
         case _expression_question_mark_2: {
             if (c == '>') {
                 s = _start_ignore_immediate_newline;
-
-                // Add the expression result to the HTML body
-                if ((luaL_loadstring(L, lua.c_str()) ||
-                     lua_pcall(L, 0, 1, 0)) != 0) {
-                    // A Lua error has occurred
-                    printf("%s\n", lua_tostring(L, -1));
-                } else if (lua_isstring(L, -1)) {
-                    body += lua_tostring(L, -1);
-                }
-                lua_pop(L, 1); // Prevent memory leak
-                lua.clear();
+                lua.insert(lua.end() - 1, ')');
+                lua += "put([[";
             } else {
                 s = _expression_2;
                 lua += '%';
-                lua += c;
+                next = false;
             }
             break;
         }
@@ -411,34 +589,44 @@ static void do_lua(std::ifstream& file, std::string& body) {
             break;
         }
     }
-}
+    lua += "]])";
 
+    // Open a new Lua virtual machine
+    lua_State* L = lua_open();
+    luaL_openlibs(L);
 
-// Structure for mapping extensions to content types
-struct mapping {
-    const char* extension;
-    const char* content_type;
-};
+    // Add our request reading functions to the Lua VM
+    lua_pushstring(L, "request");
+    lua_pushlightuserdata(L, const_cast<Request*>(&request));
+    lua_register(L, "rawrequest", lua_rawrequest);
+    lua_register(L, "method", lua_method);
+    lua_register(L, "uri", lua_uri);
+    lua_register(L, "path", lua_path);
+    lua_register(L, "version", lua_version);
+    lua_register(L, "headers", lua_headers);
+    lua_register(L, "body", lua_body);
 
+    // Add our response writing functions to the Lua VM
+    lua_pushstring(L, "response");
+    lua_pushlightuserdata(L, response);
+    lua_register(L, "addheader", lua_addheader);
+    lua_register(L, "setstatus", lua_setstatus);
 
-// The actual mappings defined for the webserver
-static mapping mappings[] = {
-    { "gif", "image/gif" },
-    { "htm", "text/html" },
-    { "html", "text/html" },
-    { "jpg", "image/jpeg" },
-    { "png", "image/png" }
-};
+    // Add our put function to the Lua VM
+    lua_pushstring(L, "response_body");
+    lua_pushlightuserdata(L, &body);
+    lua_rawset(L, LUA_REGISTRYINDEX);
+    lua_register(L, "put", lua_put);
 
-
-// Convert a file extension into a content type
-static std::string extension_to_type(const std::string& extension) {
-    for (mapping m: mappings) {
-        if (m.extension == extension) {
-            return m.content_type;
-        }
+    // Run the Lua code, which will build the body of the response
+    //printf("%s\n", lua.c_str());
+    if ((luaL_loadstring(L, lua.c_str()) || lua_pcall(L, 0, 0, 0)) != 0) {
+        // A Lua error has occurred
+        printf("%s\n", lua_tostring(L, -1));
     }
-    return "text/plain";
+
+    // Close out the Lua VM
+    lua_close(L);
 }
 
 
@@ -507,18 +695,22 @@ Response* response) {
     std::string body;
     if (type == "text/html") {
         // True : process any Lua scripts within the file before responding
-        do_lua(file, body);
+        response->SetStatus(Response::ok);
+        do_lua(file, request, response, body);
         if (file.bad()) {
             printf("Error ocurred during reading file\n");
+            return RequestHandler::Error;
         }
     } else {
         // False : just add the file as is without any extra processing
+        response->SetStatus(Response::ok);
         char buf[512];
         while (file.read(buf, sizeof(buf)).gcount() > 0) {
             body.append(buf, file.gcount());
         }
         if (file.bad()) {
             printf("Error ocurred during reading file\n");
+            return RequestHandler::Error;
         }
     }
     file.close();
@@ -527,7 +719,6 @@ Response* response) {
     response->SetBody(body);
     response->AddHeader("Content-Length",
         std::to_string(response->GetBody().size()));
-    response->SetStatus(Response::ok);
     response->AddHeader("Content-Type", type);
     return RequestHandler::OK;
 }
