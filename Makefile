@@ -36,13 +36,20 @@ not_found_handler.cc status_handler.cc reverse_proxy_handler.cc
 
 .PHONY: clean clean_target gcov test test_gcov test_setup deploy docker
 
-$(TARGET): clean_target lua
+$(TARGET): clean_target sqlite lua
 	$(CXX) -o $@ main.cc $(SRC) $(CXXFLAGS) $(LDFLAGS)
 
 lua:
 	cd LuaJIT-2.0.4 && make install PREFIX=$(shell cd LuaJIT-2.0.4 && pwd)
 	cp LuaJIT-2.0.4/lib/libluajit-5.1.so.2 .
 	cp LuaJIT-2.0.4/lib/libluajit-5.1.so.2.0.4 .
+
+sqlite:
+	cd sqlite-autoconf-3170000 && ./configure --prefix=$(shell cd \
+	sqlite-autoconf-3170000 && pwd) && make install
+	cp sqlite-autoconf-3170000/lib/libsqlite3.so .
+	cp sqlite-autoconf-3170000/lib/libsqlite3.so.0 .
+	cp sqlite-autoconf-3170000/lib/libsqlite3.so.0.8.6 .
 
 clean_target:
 	$(RM) $(TARGET)
