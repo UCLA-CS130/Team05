@@ -2,6 +2,7 @@
 //  http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/examples/cpp11_examples.html
 
 #include <fstream>
+#include <sstream>
 #include <stdio.h>
 #include "static_file_handler.h"
 #include "not_found_handler.h"
@@ -116,6 +117,106 @@ static int lua_body(lua_State* L) {
     Request* req = (Request*)lua_touserdata(L, -1);
     lua_pop(L, 1);
     lua_pushstring(L, req->body().c_str());
+    return 1;
+}
+
+
+// Converts a string containing hex values to a string of just ASCII characters
+static std::string hex2ascii(const std::string& in) {
+    std::string out;
+    out.reserve(in.size());
+    for (std::size_t i = 0; i < in.size(); ++i) {
+        if (in[i] == '%') {
+            if (i + 3 <= in.size()) {
+                int value = 0;
+                std::istringstream is(in.substr(i + 1, 2));
+                if (is >> std::hex >> value) {
+                    out += static_cast<char>(value);
+                    i += 2;
+                } else {
+                    out = std::string();
+                    return out;
+                }
+            } else {
+                out = std::string();
+                return out;
+            }
+        } else if (in[i] == '+') {
+            out += ' ';
+        } else {
+            out += in[i];
+        }
+    }
+    return out;
+}
+
+
+// Converts form data to a Lua table that is put on the top of the Lua stack
+static void form2table(lua_State* L, const std::string& data) {
+    // Read the data into a Lua table
+    lua_newtable(L);
+    std::string key;
+    std::string val;
+    bool readingkey = true;
+    for (char c : data) {
+        if (readingkey) {
+            if (c == '=') {
+                // '=' is the separator between keys and value
+                readingkey = false;
+            } else {
+                key += c;
+            }
+        } else {
+            if (c == '&') {
+                // '&' is the separate between key-value pairs
+                readingkey = true;
+
+                // Remove hex codes from the key and value then add to Lua table
+                lua_pushstring(L, hex2ascii(key).c_str());
+                lua_pushstring(L, hex2ascii(val).c_str());
+                lua_rawset(L, -3);
+                key.clear();
+                val.clear();
+            } else {
+                val += c;
+            }
+        }
+    }
+
+    // Don't forget the last key-value pair
+    lua_pushstring(L, hex2ascii(key).c_str());
+    lua_pushstring(L, hex2ascii(val).c_str());
+    lua_rawset(L, -3);
+}
+
+
+// Lua function that gets form data from the URI of the request
+static int lua_get(lua_State* L) {
+    lua_pushstring(L, "request");
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    Request* req = (Request*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    // Read the form data from the URI of the request into a Lua table
+    size_t last_question_mark = req->uri().find_last_of("?");
+    if (last_question_mark != std::string::npos) {
+        form2table(L, req->uri().substr(last_question_mark+1));
+    } else {
+        lua_newtable(L);
+    }
+    return 1;
+}
+
+
+// Lua function that gets the post data from the request
+static int lua_post(lua_State* L) {
+    lua_pushstring(L, "request");
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    Request* req = (Request*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    // Read the form data from the body of the request into a Lua table
+    form2table(L, req->body());
     return 1;
 }
 
@@ -598,6 +699,7 @@ Response* response, std::string& body) {
     // Add our request reading functions to the Lua VM
     lua_pushstring(L, "request");
     lua_pushlightuserdata(L, const_cast<Request*>(&request));
+    lua_rawset(L, LUA_REGISTRYINDEX);
     lua_register(L, "rawrequest", lua_rawrequest);
     lua_register(L, "method", lua_method);
     lua_register(L, "uri", lua_uri);
@@ -605,10 +707,13 @@ Response* response, std::string& body) {
     lua_register(L, "version", lua_version);
     lua_register(L, "headers", lua_headers);
     lua_register(L, "body", lua_body);
+    lua_register(L, "get", lua_get);
+    lua_register(L, "post", lua_post);
 
     // Add our response writing functions to the Lua VM
     lua_pushstring(L, "response");
     lua_pushlightuserdata(L, response);
+    lua_rawset(L, LUA_REGISTRYINDEX);
     lua_register(L, "addheader", lua_addheader);
     lua_register(L, "setstatus", lua_setstatus);
 
@@ -667,9 +772,15 @@ const NginxConfig& config) {
 // HTTP code 500
 RequestHandler::Status StaticFileHandler::HandleRequest(const Request& request, 
 Response* response) {
-    // Remove the path prefix from the path to get the file path
+    // Remove the path prefix from the path to get the file path + post data
     std::string path = request.path();
     path = path.substr(path_prefix.size());
+
+    // Remove the post data from the path to get the actaul file path
+    std::size_t last_question_mark_pos = request.uri().find_last_of("?");
+    if (last_question_mark_pos != std::string::npos) {
+        path = path.substr(0, last_question_mark_pos-1);
+    }
 
     // Determine the file extension
     std::size_t last_slash_pos = path.find_last_of("/");
@@ -687,6 +798,7 @@ Response* response) {
     std::ifstream file(full_path.c_str(), std::ios::in | std::ios::binary);
     if (!file) {
         // Or, use the NotFoundHandler
+        printf("Could not find file %s\n", full_path.c_str());
         NotFoundHandler h;
         return h.HandleRequest(request, response);
     }
