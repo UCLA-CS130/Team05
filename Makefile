@@ -18,7 +18,7 @@ GCOVFILES=*.gcno *.gcda *.gcov
 CXXFLAGS+=-std=c++11 -pthread -Wall -Werror
 
 # Linker flags
-LDFLAGS+= -static-libgcc -static-libstdc++ -pthread -Wl,-Bstatic -lboost_system -lboost_regex 
+LDFLAGS+= -static-libgcc -static-libstdc++ -pthread -Wl,-Bstatic -lboost_system -lboost_regex
 
 # Test flags
 TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread
@@ -30,7 +30,8 @@ TEST_FILES=proxy_bunny
 SRC=server.cc config_parser.cc response.cc \
 server_config_parser.cc request.cc echo_handler.cc \
 static_file_handler.cc request_handler.cc \
-not_found_handler.cc status_handler.cc reverse_proxy_handler.cc
+not_found_handler.cc status_handler.cc reverse_proxy_handler.cc \
+markdown.cpp markdown-tokens.cpp
 
 .PHONY: clean clean_target gcov test test_gcov test_setup deploy docker
 
