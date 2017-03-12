@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "static_file_handler.h"
 #include "not_found_handler.h"
-#include "markdown.h"
+#include "cpp-markdown/markdown.h"
 
 // Structure for mapping extensions to content types
 struct mapping {
