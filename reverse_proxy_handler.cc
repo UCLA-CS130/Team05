@@ -181,6 +181,11 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
                                  remote_port,
                                  boost::asio::ip::resolver_query_base::numeric_service);
 
+      std::cout << "Resolved host" << std::endl;
+
+      
+     
+
       // A hostname could resolve to multiple endpoints to try;
       // connect() will try all of them
       // See: http://www.boost.org/doc/libs/1_62_0/boost/asio/connect.hpp
@@ -190,7 +195,26 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
           return "RequestHandler::Error";
       }
 
+      std::cout << "Connected to host" << std::endl;
       // std::cerr << "Got past connecting to remote_host!" << std::endl;
+
+      // If HTTPS, need to do SSL handshake
+      if (std::stoi(remote_port) == 443) {
+
+        // socket.set_verify_mode(ssl::verify_peer);
+        // socket.set_verify_callback(ssl::rfc2818_verification(remote_host));
+        
+        socket.handshake(boost::asio::ssl::stream_base::client, ec);
+        if (!ec) {
+          std::cout << "Handshake succeeded" << std::endl;
+        } else {
+          std::cout << "Handshake fail!!!" << std::endl;
+        }
+
+
+      }
+      
+
 
       // std::cout << "\nRequest from browser:\n" << request.raw_request() << std::endl;
       std::string remote_request = request.raw_request();
@@ -204,17 +228,19 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
 
        // std::cout << "Request being sent to remote server:\n" << remote_request << std::endl;
 
-      socket.next_layer().send(boost::asio::buffer(remote_request));
+      // socket.next_layer().send(boost::asio::buffer(remote_request));
+      boost::asio::write(socket.next_layer(), boost::asio::buffer(remote_request));
 
       const int MAX_BUFFER_LENGTH = 1024;
       size_t bytes_received = 0;
       do {
         char response_buffer[MAX_BUFFER_LENGTH];
-        bytes_received = socket.next_layer().receive(boost::asio::buffer(response_buffer), {}, ec);
-        if (!ec) {
-          new_response.append(response_buffer, response_buffer + bytes_received);
-        }
-        // std::cerr << "bytes_received: " << bytes_received << "    ec: " << ec << std::endl;
+        // bytes_received = socket.next_layer().receive(boost::asio::buffer(response_buffer), {}, ec);
+        bytes_received = boost::asio::read(socket.next_layer(), boost::asio::buffer(response_buffer), ec);
+        // if (!ec) {
+          new_response.append(response_buffer, bytes_received);
+        // }
+         std::cout << "bytes_received: " << bytes_received << "    ec: " << ec << std::endl;
       } while (!ec);
 
 
