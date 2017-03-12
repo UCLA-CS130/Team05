@@ -18,8 +18,9 @@ GCOVFILES=*.gcno *.gcda *.gcov
 CXXFLAGS+=-std=c++11 -pthread -Wall -Werror -ILuaJIT-2.0.4/include/luajit-2.0
 
 # Linker flags
-LDFLAGS+=-pthread -lboost_system -L./LuaJIT-2.0.4/src -lluajit \
--Wl,-rpath '-Wl,$$ORIGIN'
+LDFLAGS+= -L./LuaJIT-2.0.4/src -lluajit -Wl,-rpath '-Wl,$$ORIGIN' -ldl \
+-static-libgcc -static-libstdc++ -pthread -Wl,-Bstatic -lboost_system \
+-lboost_regex
 
 # Test flags
 TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread \
@@ -32,7 +33,8 @@ TEST_FILES=proxy_bunny
 SRC=server.cc config_parser.cc response.cc \
 server_config_parser.cc request.cc echo_handler.cc \
 static_file_handler.cc request_handler.cc \
-not_found_handler.cc status_handler.cc reverse_proxy_handler.cc
+not_found_handler.cc status_handler.cc reverse_proxy_handler.cc \
+cpp-markdown/markdown.cpp cpp-markdown/markdown-tokens.cpp
 
 .PHONY: clean clean_target gcov test test_gcov test_setup deploy docker
 
@@ -92,7 +94,7 @@ request_gcov: request_test
 	gcov -r request.cc > request_gcov.txt
 
 static_file_handler_test: test_setup static_file_handler.cc static_file_handler_test.cc
-	g++ $(GCOVFLAGS) $(TESTFLAGS) static_file_handler_test.cc static_file_handler.cc request.cc response.cc not_found_handler.cc request_handler.cc config_parser.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
+	g++ $(GCOVFLAGS) $(TESTFLAGS) static_file_handler_test.cc static_file_handler.cc request.cc response.cc not_found_handler.cc request_handler.cc config_parser.cc cpp-markdown/markdown.cpp cpp-markdown/markdown-tokens.cpp ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
 	./$@
 
 static_file_handler_gcov: static_file_handler_test

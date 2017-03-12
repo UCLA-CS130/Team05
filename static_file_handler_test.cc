@@ -2,7 +2,7 @@
 #include "static_file_handler.h"
 #include "request.h"
 #include "response.h"
-
+#include "cpp-markdown/markdown.h"
 
 TEST(StaticFileHandlerTest, FileExists) {
     int fd; int fd_config;

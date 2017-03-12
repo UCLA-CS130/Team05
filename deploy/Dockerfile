@@ -1,5 +1,9 @@
-FROM busybox:ubuntu-14.04
+FROM ubuntu:14.04
+RUN apt-get update
+RUN apt-get install -y libboost-all-dev
+RUN apt-get install -y make
+RUN apt-get install -y g++
 WORKDIR /opt/webserver
 COPY . /opt/webserver
-EXPOSE 2020:2020
-CMD ["./webserver", "example_config"]
+RUN make clean && make
+CMD tar -cf - webserver
