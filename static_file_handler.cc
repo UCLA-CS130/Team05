@@ -852,7 +852,6 @@ Response* response) {
     response->SetBody(body);
     response->AddHeader("Content-Length",
         std::to_string(response->GetBody().size()));
-    response->SetStatus(Response::ok);
     response->AddHeader("Content-Type", type);
     return RequestHandler::OK;
 }
