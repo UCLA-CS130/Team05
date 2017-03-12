@@ -134,6 +134,7 @@ if not curl_output == "TEST\n":
 
 # Request an image from the  reverse proxy webserver
 curl = Popen(["curl", "-0", "-s", "-o", "proxy_bunny", "localhost:4242/reverse_proxy/bunny.jpg"], stdout=PIPE)
+curl.wait()
 diff = Popen(["cmp", "bunny.jpg", "proxy_bunny"], stdout=PIPE)
 if (diff.communicate()[0].decode() != ""):
     ec += 1

@@ -148,11 +148,22 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
     // Construct new request to send to remote host
     // Example: Modify request from: /reverse_proxy/static/file1.txt
     // to:                           /static/file1.txt
-    remote_uri.erase(0, remote_uri.find("/", 1));
+    // Note: exception to this rule: when prefix is "/" (hence, the check)
+     // std::cout << "\nOriginal request from browser:\n" << request.raw_request() << std::endl;
+     //  std::cout << "\nRemote URI b4:\n" << remote_uri << std::endl;
+     //  std::cout << "\nuri prefix:\n" << original_uri_prefix << std::endl;
+
+    if (original_uri_prefix != "/") {
+      remote_uri.erase(0, remote_uri.find("/", 1));
+    }
+
+    
 
     if (remote_uri.empty()) {
       remote_uri = "/";
     }
+
+    // std::cout << "\nRemote URI after:\n" << remote_uri << std::endl;
     request.SetUri(remote_uri);
 
     // Use resolver to handle DNS lookup if query is not an IP address
@@ -177,6 +188,7 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
 
       // std::cerr << "Got past connecting to remote_host!" << std::endl;
 
+      // std::cout << "\nRequest from browser:\n" << request.raw_request() << std::endl;
       std::string remote_request = request.raw_request();
       size_t host_pos = remote_request.find("Host");
       size_t host_end = remote_request.find("\r\n", host_pos);
@@ -185,6 +197,9 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
       // std::cerr << "---------Sending remote_request-----------\n"
                 // << remote_request
                 // << "----------End of remote_request----------\n";
+
+       // std::cout << "Request being sent to remote server:\n" << remote_request << std::endl;
+
       socket.send(boost::asio::buffer(remote_request));
 
       const int MAX_BUFFER_LENGTH = 1024;
@@ -197,6 +212,9 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
         }
         // std::cerr << "bytes_received: " << bytes_received << "    ec: " << ec << std::endl;
       } while (!ec);
+
+
+      // std::cout << "Response from server:\n" << new_response << std::endl;
 
       if (new_response.find("HTTP/1.1 302 Found") != std::string::npos) {
         got_302 = true;
@@ -265,6 +283,7 @@ RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request
     } else if (return_response_code == "500") {
         response->SetStatus(Response::internal_server_error);
     }
+
 
     response->SetFullResponse(response_buffer_string);
 
