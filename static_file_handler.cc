@@ -305,7 +305,7 @@ enum state {
 
 
 // Read through file character-by-character processing Lua scripts into body
-static void do_lua(std::ifstream& file, const Request& request,
+static bool do_lua(std::ifstream& file, const Request& request,
 Response* response, std::string& body) {
     // Go through the file character by character building the Lua script
     char c;
@@ -728,10 +728,14 @@ Response* response, std::string& body) {
     if ((luaL_loadstring(L, lua.c_str()) || lua_pcall(L, 0, 0, 0)) != 0) {
         // A Lua error has occurred
         printf("%s\n", lua_tostring(L, -1));
+        lua_close(L);
+        return false;
     }
 
     // Close out the Lua VM
     lua_close(L);
+
+    return true;
 }
 
 
@@ -777,9 +781,9 @@ Response* response) {
     path = path.substr(path_prefix.size());
 
     // Remove the post data from the path to get the actaul file path
-    std::size_t last_question_mark_pos = request.uri().find_last_of("?");
-    if (last_question_mark_pos != std::string::npos) {
-        path = path.substr(0, last_question_mark_pos-1);
+    std::size_t first_question_mark_pos = path.find("?");
+    if (first_question_mark_pos != std::string::npos) {
+        path = path.substr(0, first_question_mark_pos);
     }
 
     // Determine the file extension
@@ -808,8 +812,9 @@ Response* response) {
     if (type == "text/html") {
         // True : process any Lua scripts within the file before responding
         response->SetStatus(Response::ok);
-        do_lua(file, request, response, body);
-        if (file.bad()) {
+        if (!do_lua(file, request, response, body)) {
+            return RequestHandler::Error;
+        } else if (file.bad()) {
             printf("Error ocurred during reading file\n");
             return RequestHandler::Error;
         }

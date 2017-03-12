@@ -5,13 +5,11 @@
 
 
 TEST(StaticFileHandlerTest, FileExists) {
-
     int fd; int fd_config;
     NginxConfig config;
     NginxConfigParser parser;
     char name[] = "/tmp/fileXXXXXX";
     char name_config[] = "/tmp/configXXXXXX";
-
 
     std::string text_contents = "foo bar\n bar foo";
     std::string config_contents = "root /;";
@@ -21,7 +19,6 @@ TEST(StaticFileHandlerTest, FileExists) {
 
     // Write the text_contents into the temp file
     write(fd, text_contents.c_str(), text_contents.size());
-
 
     fd_config = mkstemp(name_config);
     write(fd_config, config_contents.c_str(), config_contents.size());
@@ -48,7 +45,6 @@ TEST(StaticFileHandlerTest, FileExists) {
     Response response;
     EXPECT_EQ(RequestHandler::Status::OK, h.HandleRequest(*request, &response));
 
-
     // Delete the file
     remove(name);
     
@@ -62,22 +58,15 @@ TEST(StaticFileHandlerTest, FileExists) {
     EXPECT_EQ("text/plain", response.GetHeaders()[1].second);
     EXPECT_EQ(text_contents, response.GetBody());
     EXPECT_EQ(Response::ResponseCode::ok, response.GetStatus());
-   
 }
 
 TEST(StaticFileHandlerTest, NoFileExists) {
     int fd; int fd_config;
     NginxConfig config;
     NginxConfigParser parser;
-    
     char name_config[] = "/tmp/configXXXXXX";
 
-
-    
     std::string config_contents = "root /;";
-
-    
-
 
     fd_config = mkstemp(name_config);
     write(fd_config, config_contents.c_str(), config_contents.size());
@@ -104,8 +93,54 @@ TEST(StaticFileHandlerTest, NoFileExists) {
     Response response;
     EXPECT_EQ(RequestHandler::Status::OK, h.HandleRequest(*request, &response));
 
-   
     EXPECT_EQ(Response::ResponseCode::not_found, response.GetStatus());
+}
 
+TEST(StaticFileHandlerTest, LuaScriptedHTML) {
+    int fd_config;
+    NginxConfig config;
+    NginxConfigParser parser;
+
+    char name_config[] = "/tmp/configXXXXXX";
+    std::string config_contents = "root .;";
+    fd_config = mkstemp(name_config);
+    write(fd_config, config_contents.c_str(), config_contents.size());
+
+    std::string test_string = std::string() +
+                              "GET /static/test.htm?a=b&b=c HTTP/1.0\r\n" +
+                              "Content-Length: 17\r\n" +
+                              "Host: localhost:1234\r\n" +
+                              "\r\n" +
+                              "foo=bar&test=test";
+
+    std::unique_ptr<Request> request = Request::Parse(test_string);
+
+    EXPECT_TRUE(request != NULL);
+
+    bool parse_status = parser.Parse(name_config, &config);
+
+    // Delete the file
+    remove(name_config);
+
+    EXPECT_TRUE(parse_status);
+
+    StaticFileHandler h;
+    EXPECT_EQ(RequestHandler::Status::OK, h.Init("/static", config));
+
+    Response response;
+    EXPECT_EQ(RequestHandler::Status::OK, h.HandleRequest(*request, &response));
+
+    using Headers = std::vector<std::pair<std::string, std::string> >;
+    Headers headers = response.GetHeaders();
+
+    ASSERT_EQ(3, headers.size());
+    EXPECT_EQ("Foo", response.GetHeaders()[0].first);
+    EXPECT_EQ("bar", response.GetHeaders()[0].second);
+    EXPECT_EQ("Content-Length", response.GetHeaders()[1].first);
+    EXPECT_EQ("26", response.GetHeaders()[1].second);
+    EXPECT_EQ("Content-Type", response.GetHeaders()[2].first);
+    EXPECT_EQ("text/html", response.GetHeaders()[2].second);
+    EXPECT_EQ(Response::ResponseCode::accepted, response.GetStatus());
+    EXPECT_EQ("hello, world\nhello, world\n", response.GetBody());
 }
 
