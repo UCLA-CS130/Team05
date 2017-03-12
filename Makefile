@@ -78,7 +78,7 @@ request_gcov: request_test
 	gcov -r request.cc > request_gcov.txt
 
 static_file_handler_test: test_setup static_file_handler.cc static_file_handler_test.cc
-	g++ $(GCOVFLAGS) $(TESTFLAGS) static_file_handler_test.cc static_file_handler.cc request.cc response.cc not_found_handler.cc request_handler.cc config_parser.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
+	g++ $(GCOVFLAGS) $(TESTFLAGS) static_file_handler_test.cc static_file_handler.cc request.cc response.cc not_found_handler.cc request_handler.cc config_parser.cc markdown.cpp markdown-tokens.cpp ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
 	./$@
 
 static_file_handler_gcov: static_file_handler_test
