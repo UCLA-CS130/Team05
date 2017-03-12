@@ -68,3 +68,5 @@ This thread reads any data sent and writes back a response. The thread closes
 as soon as it writes back a response or the connection closes. This means that  
 the server can respond to many different requests all at the same time.
 
+
+Need to run sudo apt-get install libssl-dev for boost to use openssl

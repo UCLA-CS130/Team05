@@ -1,6 +1,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/asio.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/asio/ssl.hpp>
 #include <iostream>
 #include "reverse_proxy_handler.h"
 
@@ -142,7 +143,10 @@ std::string ReverseProxyHandler::getRemoteResponseCode(const std::string& respon
 // we're serving on their behalf
 std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::string remote_uri) {
     boost::asio::io_service io_service;
-    tcp::socket socket(io_service);
+    boost::asio::ssl::context ctx(boost::asio::ssl::context::sslv23);
+    boost::asio::ssl::stream<tcp::socket> socket(io_service, ctx);
+    
+    
     tcp::resolver resolver(io_service);
 
     // Construct new request to send to remote host
@@ -180,7 +184,7 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
       // A hostname could resolve to multiple endpoints to try;
       // connect() will try all of them
       // See: http://www.boost.org/doc/libs/1_62_0/boost/asio/connect.hpp
-      boost::asio::connect(socket, resolver.resolve(query), ec);
+      boost::asio::connect(socket.next_layer(), resolver.resolve(query), ec);
       if (ec == boost::asio::error::not_found) {
           printf("Reverse proxy connection attempt to remote host failed. Check hostname and port number.\n");
           return "RequestHandler::Error";
@@ -200,13 +204,13 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
 
        // std::cout << "Request being sent to remote server:\n" << remote_request << std::endl;
 
-      socket.send(boost::asio::buffer(remote_request));
+      socket.next_layer().send(boost::asio::buffer(remote_request));
 
       const int MAX_BUFFER_LENGTH = 1024;
       size_t bytes_received = 0;
       do {
         char response_buffer[MAX_BUFFER_LENGTH];
-        bytes_received = socket.receive(boost::asio::buffer(response_buffer), {}, ec);
+        bytes_received = socket.next_layer().receive(boost::asio::buffer(response_buffer), {}, ec);
         if (!ec) {
           new_response.append(response_buffer, response_buffer + bytes_received);
         }

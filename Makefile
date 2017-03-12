@@ -15,10 +15,10 @@ GCOVFLAGS=-fprofile-arcs -ftest-coverage
 GCOVFILES=*.gcno *.gcda *.gcov
 
 # Compiler flags
-CXXFLAGS+=-std=c++11 -pthread -Wall -Werror
+CXXFLAGS+=-std=c++11 -Wall -Werror
 
 # Linker flags
-LDFLAGS+= -static-libgcc -static-libstdc++ -pthread -Wl,-Bstatic -lboost_system 
+LDFLAGS+= -static-libgcc -static-libstdc++ -ldl -lssl -lcrypto -lboost_system -Wl,-Bstatic -pthread 
 
 # Test flags
 TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread
