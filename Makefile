@@ -18,7 +18,7 @@ GCOVFILES=*.gcno *.gcda *.gcov
 CXXFLAGS+=-std=c++11 -pthread -Wall -Werror
 
 # Linker flags
-LDFLAGS+= -static-libgcc -static-libstdc++ -pthread -Wl,-Bstatic -lboost_system 
+LDFLAGS+= -static-libgcc -static-libstdc++ -pthread -Wl,-Bstatic -lboost_system -lboost_regex 
 
 # Test flags
 TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread
