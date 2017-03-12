@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "static_file_handler.h"
 #include "not_found_handler.h"
-
+#include "markdown.h"
 
 // Structure for mapping extensions to content types
 struct mapping {
@@ -20,7 +20,8 @@ static mapping mappings[] = {
     { "htm", "text/html" },
     { "html", "text/html" },
     { "jpg", "image/jpeg" },
-    { "png", "image/png" }
+    { "png", "image/png" },
+    { "md", "text/html" }
 };
 
 
@@ -106,7 +107,22 @@ Response* response) {
     while (file.read(buf, sizeof(buf)).gcount() > 0) {
         body.append(buf, file.gcount());
     }
-    response->SetBody(body);
+    // Convert markdown to html file if extension is .md
+    // Otherwise, set the body normally
+    if (extension == "md") {
+        // Read in markdown body to convert to html
+        markdown::Document doc;
+        doc.read(body);
+
+        // Markdown write function outputs to an ostream so convert to string
+        std::ostringstream stream;
+        doc.write(stream);
+        std::string md_html = stream.str();
+
+        response->SetBody(md_html);
+    } else {
+        response->SetBody(body);
+    }
     response->SetStatus(Response::ok);
     response->AddHeader("Content-Length", std::to_string(response->GetBody().size()));
     response->AddHeader("Content-Type", type);
