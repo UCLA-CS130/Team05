@@ -45,6 +45,7 @@ lua:
 	cp LuaJIT-2.0.4/lib/libluajit-5.1.so.2.0.4 .
 
 sqlite:
+	bash fix-timestamps.sh
 	cd sqlite-autoconf-3170000 && ./configure --prefix=$(shell cd \
 	sqlite-autoconf-3170000 && pwd) && make install
 	cp sqlite-autoconf-3170000/lib/libsqlite3.so .
