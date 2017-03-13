@@ -73,10 +73,12 @@ There is support for scripting Lua in files to make custom request handlers.
 To do this, just add Lua tags to served HTML files as documented below:  
 ```
 <?lua chunk ?>
-Processes the Lua chunk execution results. The alternative form <% chunk %> can also be used.
+Processes the Lua chunk execution results. The alternative form
+<% chunk %> can also be used.
 
 <?lua= expression ?>
-Processes the Lua expression and outputs its results into the HTML file. The alternative form <%= expression %> can also be used.
+Processes the Lua expression and outputs its results into the HTML
+file. The alternative form <%= expression %> can also be used.
 ```
 The file "test.htm" goes over all custom Lua functions added. These allow the  
 script writer to access the HTTP request and modify the HTTP response. An  
