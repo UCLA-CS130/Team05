@@ -7,4 +7,4 @@ RUN apt-get install -y libssl-dev
 WORKDIR /opt/webserver
 COPY . /opt/webserver
 RUN make clean && make
-CMD tar -cf - webserver
+CMD tar -cf - webserver *.so*

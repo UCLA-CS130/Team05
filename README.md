@@ -11,6 +11,17 @@ Coverage, Bash Integration Testing, and Nginx-inspired parsing of config
 files - modeling the HTTP Restful API  
 
 ## Usage  
+The program depends on libssl which can be installed via  
+```
+sudo apt-get install -y libboost-all-dev
+sudo apt-get install -y libssl-dev
+```
+
+If running a newer version of Ubuntu, you may need to downgrade libssl first  
+```
+sudo apt-get install libssl1.0.0=1.0.1f-1ubuntu2
+```
+
 In order to create the executable and try our webserver, just run "make"  
 in the project directory. Our tests can be run via "make test", and test  
 coverage can be measured with "make test_gcov". We also implement "make  
@@ -72,27 +83,28 @@ the server can respond to many different requests all at the same time.
 There is support for scripting Lua in files to make custom request handlers.  
 To do this, just add Lua tags to served HTML files as documented below:  
 ```
-<?lua chunk ?>
+&lt;?lua chunk ?&gt;
 Processes the Lua chunk execution results. The alternative form
-<% chunk %> can also be used.
+&lt;% chunk %&gt; can also be used.
 
-<?lua= expression ?>
+&lt;?lua= expression ?&gt;
 Processes the Lua expression and outputs its results into the HTML
-file. The alternative form <%= expression %> can also be used.
+file. The alternative form &lt;%= expression %&gt; can also be used.
 ```
 The file "test.htm" goes over all custom Lua functions added. These allow the  
 script writer to access the HTTP request and modify the HTTP response. An  
 example usage is shown where SQLLite is used to create a chatbox. To access  
-it, please open the server and visit localhost:2020/chatbox.htm in a browser.  
+it, please open the server and visit localhost:2020/static/chatbox.htm in a  
+browser.
 
 An additional example is given below that shows off the recursive addition of  
 the HTML `<li>` tag for each item in a Lua list. This shows off a unique usage  
 that the chatbox example does not take advantage of.
 ```
 <ul>
-    <% for i, item in ipairs(list) do %>
-    <li><%= item %></li>
-    <% end %>
+    &lt;% for i, item in ipairs(list) do %&gt;
+    <li>&lt;%= item %&gt;</li>
+    &lt;% end %&gt;
 </ul>
 ```
 

@@ -8,7 +8,7 @@
 port 8085;  # This is also a comment
 
 path /static StaticFileHandler {
-  root ./;
+    root ./;
 }
 
 path /echo EchoHandler {}

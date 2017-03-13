@@ -2,9 +2,7 @@
 TARGET=webserver
 
 # Files to be deployed with the webserver for use by it
-DEPLOYFILES=example_config bunny.jpg chatbox.htm markdown.md design.html \
-libluajit-5.1.so.2 libluajit-5.1.so.2.0.4 libsqlite3.so libsqlite3.so.0 \
-libsqlite3.so.0.8.6 libcrypto.so.1.0.0 libssl.so.1.0.0 libgcc_s.so.1
+DEPLOYFILES=example_config bunny.jpg chatbox.htm markdown.md design.html
 
 # Test executables
 TESTEXEC=config_parser_test response_test server_config_parser_test request_test static_file_handler_test echo_handler_test not_found_handler_test reverse_proxy_handler_test
@@ -23,8 +21,8 @@ CXXFLAGS+= -std=c++11 -pthread -Wall -Werror -ILuaJIT-2.0.4/include/luajit-2.0
 
 # Linker flags
 LDFLAGS+= -static-libgcc -static-libstdc++ -Wl,-rpath '-Wl,$$ORIGIN' \
--L./LuaJIT-2.0.4/src -lluajit -pthread -lssl -lcrypto -Wl,-Bstatic -lboost_system \
--lboost_regex -ldl 
+-L./LuaJIT-2.0.4/src -lluajit -pthread -Wl,-Bstatic -lssl -lcrypto \
+-lboost_system -lboost_regex -Wl,-Bdynamic -ldl
 
 # Test flags
 TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread \
@@ -64,6 +62,8 @@ clean_target:
 clean: clean_target
 	$(RM) $(GCOVFILES) $(TESTEXEC) $(GTEST_FILES) *_gcov.txt
 	$(RM) $(TEST_FILES)
+	$(RM) binary.tar webserver_image
+	$(RM) -r deploy
 
 test_gcov: $(GCOVEXEC)
 
@@ -133,11 +133,13 @@ reverse_proxy_handler_gcov: reverse_proxy_handler_test
 	gcov -r reverse_proxy_handler.cc > reverse_proxy_handler_gcov.txt
 
 docker:
+	rm -r -f deploy binary.tar
 	docker build -t httpserver.build .
 	docker run httpserver.build > binary.tar
-	rm -r -f deploy
 	mkdir deploy
 	cp $(DEPLOYFILES) deploy
+	cp -r sqlite-ffi deploy/sqlite-ffi
+	cp /lib/x86_64-linux-gnu/libgcc_s.so.1 deploy
 	tar -xvf binary.tar -C deploy/
 	cp Dockerfile.run deploy/Dockerfile
 	docker build -t httpserver deploy
