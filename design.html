@@ -5,6 +5,62 @@
 <body>
 
 <h1>Team05 Design</h1>
+<h2>Features:</h2>
+<h3>Request Handlers</h3>
+<ul>
+    <li>
+        <p><strong>Echo Handler</strong></p>
+        <p>Description: This echoes the request sent to the server back
+        to the client-side browser.
+        </p>
+        <p>Usage: <a href="http://54.213.82.160:2020/echo">
+        Echo the request back to the client</a></p>
+    </li>
+    <li>
+            <p><strong>Static File Handler</strong></p>
+            <p>Description: Statically serves a file from a given root
+            directory given the following URI: /. Some example files 
+            for one to play with design.html and markdown.md
+            If the file path could not be found, it      
+            returns a 404 Not Found Handler response. We added also
+            another feature that provides markdown conversion from .md
+            files to .html files given proper markdown syntax, using a
+            cpp-markdown library.
+            </p>
+            <p>Usage: 
+            1. <a href="http://54.213.82.160:2020/bunny.jpg">
+            Serve design.html file</a><br />
+            2. <a href="http://54.213.82.160:2020/markdown.md">Convert 
+            markdown file to .html file using cpp-markdown</a><br />
+            3. <a href="http://54.213.82.160:2020/file_does_not_exist">
+            File not found</a>
+            </p>
+    </li>
+    <li>
+        <p><strong>Reverse Proxy Handler</strong></p>
+        <p>Description: This acts as a reverse proxy to talk to the 
+        remote_host www.ucla.edu and remote_port 80 that also handles
+        redirects (302s). This was not implemented by our team and the 
+        functionality or appearance of the site may not be perfect.
+        </p>
+        <p>Usage: <a href="http://54.213.82.160:2020/reverse_proxy">
+        Test the reverse proxy for www.ucla.edu</a></p>
+    </li>
+    <li>
+        <p><strong>Status Handler</strong></p>
+        <p>Description: This keeps track of all the requests made to the
+        server with response codes associated with the requests, 
+        outputted in a nice table format. We made sure to include mutex
+        locking to make sure our data is thread-safe in having a
+        singleton object hold the request handler history.
+        </p>
+        <p>Usage: <a href="http://54.213.82.160:2020/status">
+        Check out the status dashboard!</a></p>
+    </li>
+</ul>
+<h3>Lua and SQLite Chatbox</h3>
+
+<h3>HTTPS</h3>
 
 </body>
 </html>
