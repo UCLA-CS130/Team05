@@ -1,6 +1,8 @@
 webserver
 *.pem
 *~
+binary.tar
+deploy/
 LuaJIT-2.0.4/
 libluajit-5.1.so.2
 libluajit-5.1.so.2.0.4

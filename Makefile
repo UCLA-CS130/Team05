@@ -1,8 +1,10 @@
 # Name of the executable
 TARGET=webserver
 
-# Test executables
+# Files to be deployed with the webserver for use by it
+DEPLOYFILES=example_config bunny.jpg chatbox.htm markdown.md
 
+# Test executables
 TESTEXEC=config_parser_test response_test server_config_parser_test request_test static_file_handler_test echo_handler_test not_found_handler_test reverse_proxy_handler_test
 GCOVEXEC=config_parser_gcov response_gcov server_config_parser_gcov request_gcov static_file_handler_gcov echo_handler_gcov not_found_handler_gcov reverse_proxy_handler_gcov
 
@@ -15,12 +17,12 @@ GCOVFLAGS=-fprofile-arcs -ftest-coverage
 GCOVFILES=*.gcno *.gcda *.gcov
 
 # Compiler flags
-CXXFLAGS+=-std=c++11 -pthread -Wall -Werror -ILuaJIT-2.0.4/include/luajit-2.0
+CXXFLAGS+= -std=c++11 -pthread -Wall -Werror -ILuaJIT-2.0.4/include/luajit-2.0
 
 # Linker flags
-LDFLAGS+= -L./LuaJIT-2.0.4/src -lluajit -Wl,-rpath '-Wl,$$ORIGIN' -ldl \
--static-libgcc -static-libstdc++ -pthread -Wl,-Bstatic -lboost_system \
--lboost_regex
+LDFLAGS+= -static-libgcc -static-libstdc++ -Wl,-rpath '-Wl,$$ORIGIN' \
+-L./LuaJIT-2.0.4/src -lluajit -pthread -Wl,-Bstatic -lboost_system \
+-lboost_regex -ldl
 
 # Test flags
 TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread \
@@ -128,14 +130,16 @@ reverse_proxy_handler_test: test_setup reverse_proxy_handler.cc reverse_proxy_ha
 reverse_proxy_handler_gcov: reverse_proxy_handler_test
 	gcov -r reverse_proxy_handler.cc > reverse_proxy_handler_gcov.txt
 
-docker: 
+docker:
 	docker build -t httpserver.build .
 	docker run httpserver.build > binary.tar
-	cp binary.tar deploy/binary.tar 
-	cp example_config deploy/example_config
-	tar -xvf deploy/binary.tar -C deploy/
+	rm -r -f deploy
+	mkdir deploy
+	cp $(DEPLOYFILES) deploy
+	tar -xvf binary.tar -C deploy/
+	cp Dockerfile.run deploy/Dockerfile
 	docker build -t httpserver deploy
 
-deploy: 
+deploy:
 	./deploy.sh
 
