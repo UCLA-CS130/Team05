@@ -1,7 +1,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/asio.hpp>
 #include <boost/tokenizer.hpp>
-#include <boost/asio/ssl.hpp>
+#include <boost/bind.hpp>
 #include <iostream>
 #include "reverse_proxy_handler.h"
 
@@ -143,9 +143,14 @@ std::string ReverseProxyHandler::getRemoteResponseCode(const std::string& respon
 // we're serving on their behalf
 std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::string remote_uri) {
     boost::asio::io_service io_service;
+
+    // Some set up for ssl; 
+    //   Based off of: 
+    //     http://www.boost.org/doc/libs/1_47_0/doc/html/boost_asio/example/ssl/client.cpp
+    //     http://www.boost.org/doc/libs/1_47_0/doc/html/boost_asio/overview/ssl.html
     boost::asio::ssl::context ctx(boost::asio::ssl::context::sslv23);
+    ctx.set_default_verify_paths();
     boost::asio::ssl::stream<tcp::socket> socket(io_service, ctx);
-    
     
     tcp::resolver resolver(io_service);
 
@@ -183,7 +188,14 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
 
       std::cout << "Resolved host" << std::endl;
 
-      
+      // If HTTPS, verify certifcate of remote host
+      if (std::stoi(remote_port) == 443) {
+
+        socket.set_verify_mode(boost::asio::ssl::verify_peer);
+        // socket.set_verify_callback(
+        //   boost::bind(&ReverseProxyHandler::verifyCertificate, this, _1, _2));
+        socket.set_verify_callback(boost::asio::ssl::rfc2818_verification(remote_host));
+      }
      
 
       // A hostname could resolve to multiple endpoints to try;
@@ -200,15 +212,13 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
 
       // If HTTPS, need to do SSL handshake
       if (std::stoi(remote_port) == 443) {
-
-        // socket.set_verify_mode(boost::asio::ssl::verify_peer);
-        // socket.set_verify_callback(boost::asio::ssl::rfc2818_verification(remote_host));
         
         socket.handshake(boost::asio::ssl::stream_base::client, ec);
         if (!ec) {
           std::cout << "Handshake succeeded" << std::endl;
         } else {
-          std::cout << "Handshake fail!!!" << std::endl;
+          std::cout << "Handshake failed!" << std::endl;
+          return "RequestHandler::Error";
         }
 
 
@@ -226,20 +236,24 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
                 // << remote_request
                 // << "----------End of remote_request----------\n";
 
-      size_t con_pos = remote_request.find("Connection");
-      size_t con_end = remote_request.find("\r\n", con_pos);
-      size_t con_len = con_end - con_pos;
-      remote_request.replace(con_pos, con_len, "Connection: close");
+     
+
+      // Not done on other ports otherwise could break other tests
+      if (std::stoi(remote_port) == 443) {
+
+        //make it so we look for eof
+        size_t con_pos = remote_request.find("Connection");
+        size_t con_end = remote_request.find("\r\n", con_pos);
+        size_t con_len = con_end - con_pos;
+        remote_request.replace(con_pos, con_len, "Connection: close");
 
 
-
-       
-
-
-      size_t http_pos = remote_request.find("HTTP/1");
-      size_t http_end = remote_request.find("\r\n", http_pos);
-      size_t http_len = http_end - http_pos;
-      remote_request.replace(http_pos, http_len, "HTTP/1.0");
+        // Replace HTTP/1.1 by HTTP/1.0 so server shouldn't send us transfer chunk encoding
+        size_t http_pos = remote_request.find("HTTP/1");
+        size_t http_end = remote_request.find("\r\n", http_pos);
+        size_t http_len = http_end - http_pos;
+        remote_request.replace(http_pos, http_len, "HTTP/1.0");
+      }
 
       std::cout << "Request being sent to remote server:\n" << remote_request << std::endl;
 
@@ -288,12 +302,16 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
       // std::cout << "Got_302? " << got_302 << std::endl;
     } while (got_302);
 
+    
     std::cout << "Error value: " << ec.value() << std::endl;
     // Checking ec set when reading response from remote host
     switch (ec.value()) {
       case boost::asio::error::eof:
       case boost::system::errc::success:
-      case 335544539: // SSL error for when the certificate was not checked/verified
+      // SSL error for SSL_R_SHORT_READ
+      // Expected behavior if handshake works according to:
+      //  http://stackoverflow.com/questions/8467277/boostasio-and-async-ssl-stream-how-to-detect-end-of-data-connection-close
+      case 335544539: 
         // std::cerr << "remote_host's response: \n" << new_response << std::endl;
         break;
       default:
@@ -348,4 +366,24 @@ RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request
     response->SetFullResponse(response_buffer_string);
 
     return RequestHandler::OK;
+}
+
+// Function for verifying certificate from remote server is https is used
+  //   Taken from: http://www.boost.org/doc/libs/1_47_0/doc/html/boost_asio/example/ssl/client.cpp
+bool ReverseProxyHandler::verifyCertificate(bool preverified,
+    boost::asio::ssl::verify_context& ctx) {
+  // The verify callback can be used to check whether the certificate that is
+  // being presented is valid for the peer. For example, RFC 2818 describes
+  // the steps involved in doing this for HTTPS. Consult the OpenSSL
+  // documentation for more details. Note that the callback is called once
+  // for each certificate in the certificate chain, starting from the root
+  // certificate authority.
+
+  // In this example we will simply print the certificate's subject name.
+  char subject_name[256];
+  X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+  X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
+  std::cout << "Verifying " << subject_name << "\n";
+
+  return preverified;
 }
