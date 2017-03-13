@@ -68,5 +68,37 @@ This thread reads any data sent and writes back a response. The thread closes
 as soon as it writes back a response or the connection closes. This means that  
 the server can respond to many different requests all at the same time.
 
+## Lua Scripting
+There is support for scripting Lua in files to make custom request handlers.  
+To do this, just add Lua tags to served HTML files as documented below:  
+```
+<?lua chunk ?>
+Processes the Lua chunk execution results. The alternative form
+<% chunk %> can also be used.
 
-Need to run sudo apt-get install libssl-dev for boost to use openssl
+<?lua= expression ?>
+Processes the Lua expression and outputs its results into the HTML
+file. The alternative form <%= expression %> can also be used.
+```
+The file "test.htm" goes over all custom Lua functions added. These allow the  
+script writer to access the HTTP request and modify the HTTP response. An  
+example usage is shown where SQLLite is used to create a chatbox. To access  
+it, please open the server and visit localhost:2020/chatbox.htm in a browser.  
+
+An additional example is given below that shows off the recursive addition of  
+the HTML `<li>` tag for each item in a Lua list. This shows off a unique usage  
+that the chatbox example does not take advantage of.
+```
+<ul>
+    <% for i, item in ipairs(list) do %>
+    <li><%= item %></li>
+    <% end %>
+</ul>
+```
+
+## HTTPS Support for Reverse Proxy  
+HTTPS support was added to the reverse proxy handler. It takes advantage of  
+Boost implementations that uses OpenSSL. As a result, the command "sudo apt-get  
+install libssl-dev" needs to be run in order to install the dependencies needed  
+for OpenSSL. In order to see it in action, run "./webserver https_proxy_config".  
+Visiting "localhost:4343" will load the page from "https://www.google.com".
