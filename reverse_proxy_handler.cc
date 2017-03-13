@@ -230,9 +230,14 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
 
         //make it so we look for eof
         size_t con_pos = remote_request.find("Connection");
-        size_t con_end = remote_request.find("\r\n", con_pos);
-        size_t con_len = con_end - con_pos;
-        remote_request.replace(con_pos, con_len, "Connection: close");
+        if (con_pos != std::string::npos) {
+          size_t con_end = remote_request.find("\r\n", con_pos);
+          size_t con_len = con_end - con_pos;
+          remote_request.replace(con_pos, con_len, "Connection: close");
+        } 
+        // else { // Need to add it
+
+        // }
 
 
         // Replace HTTP/1.1 by HTTP/1.0 so server shouldn't send us transfer chunk encoding
