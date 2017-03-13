@@ -16,7 +16,9 @@
         </p>
         <p>Usage:<br>
         <a href="http://54.213.82.160:2020/echo">
-        Echo the request back to the client</a></p>
+        Echo the request back to the client</a><br />
+        <a href="localhost:8085/echo">
+        Local link</a></p>
     </li>
     <li>
             <p><strong>Static File Handler</strong></p>
@@ -33,10 +35,16 @@
             <p>Usage:<br> 
             1. <a href="http://54.213.82.160:2020/static/bunny.jpg">
             Serve design.html file</a><br />
+            <a href="localhost:8085/static/bunny.jpg">
+            Local link</a><br />
             2. <a href="http://54.213.82.160:2020/static/markdown.md">Convert 
             markdown file to .html file using cpp-markdown</a><br />
+            <a href="localhost:8085/static/markdown.md">
+            Local link</a><br />    
             3. <a href="http://54.213.82.160:2020/static/file_does_not_exist">
             File not found</a>
+            <a href="localhost:8085/static/file_does_not_exist">
+            Local link</a><br />    
             </p>
     </li>
     <li>
@@ -56,7 +64,9 @@
         communication instead.
         <p>Usage:<br>
         <a href="http://54.213.82.160:2020">
-        Test the reverse proxy for https://www.google.com</a></p>
+        Test the reverse proxy for https://www.google.com</a><br />
+        <a href="localhost:8085">
+        Local link</a></p>
     </li>
     <li>
         <p><strong>Status Handler</strong></p>
@@ -68,7 +78,9 @@
         </p>
         <p>Usage:<br>
         <a href="http://54.213.82.160:2020/status">
-        Check out the status dashboard!</a></p>
+        Check out the status dashboard!</a><br />
+        <a href="localhost:8085/status">
+        Local link</a></p>
     </li>
 </ul>
 
@@ -86,8 +98,8 @@ form &lt;%= <i>expression</i> %&gt; can also be used.
 script writer to access the HTTP request and modify the HTTP response. An<br>
 example usage is shown where SQLLite is used to create a chatbox. To access<br>
 it, please click <a href="http://54.213.82.160:2020/static/chatbox.htm">this</a> link
-to our live server. To see how this is implemented,<br>
-open "chatbox.htm".</p>
+to our live server (or <a href="localhost:8085/static/chatbox.htm">this</a> link if its our local server). 
+To see how this is implemented,<br>open "chatbox.htm".</p>
 
 <p>An additional example is given below that shows off the recursive addition of<br>
 the HTML <code>&lt;li&gt;</code> tag for each item in a Lua list. This shows off a unique usage<br>
