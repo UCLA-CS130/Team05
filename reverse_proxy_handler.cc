@@ -233,8 +233,15 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
 
 
 
-       std::cout << "Request being sent to remote server:\n" << remote_request << std::endl;
-      
+       
+
+
+      size_t http_pos = remote_request.find("HTTP/1");
+      size_t http_end = remote_request.find("\r\n", http_pos);
+      size_t http_len = http_end - http_pos;
+      remote_request.replace(http_pos, http_len, "HTTP/1.0");
+
+      std::cout << "Request being sent to remote server:\n" << remote_request << std::endl;
 
       // socket.next_layer().send(boost::asio::buffer(remote_request));
       if (std::stoi(remote_port) == 443) {
@@ -281,16 +288,19 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
       // std::cout << "Got_302? " << got_302 << std::endl;
     } while (got_302);
 
+    std::cout << "Error value: " << ec.value() << std::endl;
     // Checking ec set when reading response from remote host
     switch (ec.value()) {
       case boost::asio::error::eof:
       case boost::system::errc::success:
+      case 335544539: // SSL error for when the certificate was not checked/verified
         // std::cerr << "remote_host's response: \n" << new_response << std::endl;
         break;
       default:
         // std::cerr << "Error reading from remote_host, error code: " << ec << std::endl;
         return "RequestHandler::Error";
     }
+    // std::cout << "\nResponse returning:\n" << new_response << std::endl;
 
     return new_response;
 }
