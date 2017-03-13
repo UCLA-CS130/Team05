@@ -77,7 +77,7 @@ curl = Popen(["curl", "-0", "-s", "localhost:2020/echo/"], stdout=PIPE)
 ec += outputChecker(curl, curl_output_expected_echo2)
 
 # Request a file from the webserver using curl
-curl = Popen(["curl", "-0", "-s", "localhost:2020/test_file"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "localhost:2020/static/test_file"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
 sys.stdout.write("\nServer output for integration test\n")
 sys.stdout.write("==========\n")
@@ -89,11 +89,11 @@ if not curl_output == "TEST\n":
     sys.stdout.write("  TEST\n")
 
 # Request an image file from the webserver using curl
-curl = Popen(["curl", "-0", "-s", "-I", "localhost:2020/bunny.jpg"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "-I", "localhost:2020/static/bunny.jpg"], stdout=PIPE)
 ec += outputChecker(curl, curl_output_expected_static_image)
 
 # Request a file from the webserver using curl that does not exist
-curl = Popen(["curl", "-0", "-s", "localhost:2020/doesnotexist"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "localhost:2020/static/doesnotexist"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
 sys.stdout.write("\nServer output for integration test\n")
 sys.stdout.write("==========\n")
@@ -129,7 +129,7 @@ curl = Popen(["curl", "-0", "-s", "localhost:4242/reverse_proxy/echo"], stdout=P
 ec += outputChecker(curl, curl_output_expected_echo)
 
 # Request a file from the  reverse proxy webserver
-curl = Popen(["curl", "-0", "-s", "localhost:4242/reverse_proxy/test_file"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "localhost:4242/reverse_proxy/static/test_file"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
 sys.stdout.write("\nServer output for integration test\n")
 sys.stdout.write("==========\n")
@@ -141,7 +141,7 @@ if not curl_output == "TEST\n":
     sys.stdout.write("  TEST\n")
 
 # Request an image from the  reverse proxy webserver
-curl = Popen(["curl", "-0", "-s", "-o", "proxy_bunny", "localhost:4242/reverse_proxy/bunny.jpg"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "-o", "proxy_bunny", "localhost:4242/reverse_proxy/static/bunny.jpg"], stdout=PIPE)
 curl.wait()
 diff = Popen(["cmp", "bunny.jpg", "proxy_bunny"], stdout=PIPE)
 if (diff.communicate()[0].decode() != ""):
@@ -169,9 +169,9 @@ ec += outputChecker(curl, curl_output_expected_https_reverse_proxy)
 # Get page through proxy and straight from google.com and compare results
 curl = Popen(["curl", "-0", "-s", "localhost:4343"], stdout=PIPE)
 # Grab first 900 characters because script associated with timestamp makes results differ
-curl_output = curl.communicate()[0].decode("windows-1252")[:900]
+curl_output = curl.communicate()[0].decode("windows-1252")[:100]
 curl_expected = Popen(["curl", "-0", "-s", "https://www.google.com"], stdout=PIPE)
-curl_output_expected = curl_expected.communicate()[0].decode("windows-1252")[:900]
+curl_output_expected = curl_expected.communicate()[0].decode("windows-1252")[:100]
 if (curl_output != curl_output_expected):
     ec += 1
     sys.stdout.write("FAILED to match google.com via reverse-proxy\n")

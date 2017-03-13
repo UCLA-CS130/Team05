@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<h1>Team05 Design Doc</h1>
+<p>Github Repo: <a href="https://github.com/UCLA-CS130/Team05">Team05 Repo</a></p>
+<h2>Features</h2>
+
+<h3>Request Handlers</h3>
+<ul>
+    <li>
+        <p><strong>Echo Handler</strong></p>
+        <p>Description: This echoes the request sent to the server back to the<br>
+        client-side browser.
+        </p>
+        <p>Usage:<br>
+        <a href="http://54.213.82.160:2020/echo">
+        Echo the request back to the client</a><br />
+        <a href="localhost:8085/echo">
+        Local link</a></p>
+    </li>
+    <li>
+            <p><strong>Static File Handler</strong></p>
+            <p>Description: Statically serves a file from a given root directory<br>
+            given the following URI: /. Some example files for one to play with<br>
+            design.html and markdown.md<br>
+            If the file path could not be found, it returns a 404 Not Found<br>
+            Handler response. We added also another feature that provides<br>
+            markdown conversion from .md files to .html files given proper<br>
+            markdown syntax, using a cpp-markdown library. The static file<br>
+            handler supports Lua scripting in HTML files, which will be described<br>
+            in more-depth below.
+            </p>
+            <p>Usage:<br> 
+            1. <a href="http://54.213.82.160:2020/static/bunny.jpg">
+            Serve design.html file</a><br />
+            <a href="localhost:8085/static/bunny.jpg">
+            Local link</a><br />
+            2. <a href="http://54.213.82.160:2020/static/markdown.md">Convert 
+            markdown file to .html file using cpp-markdown</a><br />
+            <a href="localhost:8085/static/markdown.md">
+            Local link</a><br />    
+            3. <a href="http://54.213.82.160:2020/static/file_does_not_exist">
+            File not found</a>
+            <a href="localhost:8085/static/file_does_not_exist">
+            Local link</a><br />    
+            </p>
+    </li>
+    <li>
+        <p><strong>Reverse Proxy Handler</strong></p>
+        <p>Description: This acts as a reverse proxy to talk to the remote_host<br>
+        www.ucla.edu and remote_port 80 that also handles redirects (302s). This<br>
+        was not implemented by our team and the functionality or appearance of<br>
+        the site may not be perfect.
+        </p>
+
+        <p>HTTPS support was added as a feature, utilizing Boost's implementation that<br>
+        uses an the OpenSSL library. If the remote port for the reverse proxy is an <br>
+        HTTPS port (443), then it verifies the remote host's certificate before<br>
+        performing the SSL handshake. If the handshake passes, ssl streams (with an<br>
+        underlying TCP boost socket) are used for the rest of the communication. If<br>
+        the port is not an HTTPS port, the underyling sockets are used directly for<br>
+        communication instead.
+        <p>Usage:<br>
+        <a href="http://54.213.82.160:2020">
+        Test the reverse proxy for https://www.google.com</a><br />
+        <a href="localhost:8085">
+        Local link</a></p>
+    </li>
+    <li>
+        <p><strong>Status Handler</strong></p>
+        <p>Description: This keeps track of all the requests made to the server<br>
+        with response codes associated with the requests, outputted in a nice<br>
+        table format. We made sure to include mutex locking to make sure our<br>
+        data is thread-safe in having a singleton object hold the request<br>
+        handler history.
+        </p>
+        <p>Usage:<br>
+        <a href="http://54.213.82.160:2020/status">
+        Check out the status dashboard!</a><br />
+        <a href="localhost:8085/status">
+        Local link</a></p>
+    </li>
+</ul>
+
+<h3>Lua Scripting</h3>
+<p>There is support for scripting in HTML files to make custom request handlers.<br>
+To do this, just add Lua tags to served HTML files as documented below:</p>
+<pre><code>&lt;?lua <i>chunk</i> ?&gt;
+Processes the Lua chunk execution results. The alternative form &lt;% <i>chunk</i> %&gt; can also be used.
+
+&lt;?lua= <i>expression</i> ?&gt;
+Processes the Lua expression and outputs its results into the HTML file. The alternative
+form &lt;%= <i>expression</i> %&gt; can also be used.
+</code></pre>
+<p>The file "test.htm" goes over all custom Lua functions added. These allow the<br>
+script writer to access the HTTP request and modify the HTTP response. An<br>
+example usage is shown where SQLLite is used to create a chatbox. To access<br>
+it, please click <a href="http://54.213.82.160:2020/static/chatbox.htm">this</a> link
+to our live server (or <a href="localhost:8085/static/chatbox.htm">this</a> link if its our local server). 
+To see how this is implemented,<br>open "chatbox.htm".</p>
+
+<p>An additional example is given below that shows off the recursive addition of<br>
+the HTML <code>&lt;li&gt;</code> tag for each item in a Lua list. This shows off a unique usage<br>
+that the chatbox example does not take advantage of.</p>
+
+<pre><code>&lt;ul&gt;
+    &lt;% for i, item in ipairs(list) do %&gt;
+    &lt;li&gt;&lt;%= item %&gt;&lt;/li&gt;
+    &lt;% end %&gt;
+&lt;/ul&gt;
+</code></pre>
+
+<p>The Lua scripting in HTML files allows for creating games, forums, or other<br>
+complex server-side apps using the web server. Mixed with JavaScript, the<br>
+possibilities are numerous as to what can be done.</p>
+
+
+
+</body>
+</html>
+
