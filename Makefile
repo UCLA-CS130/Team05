@@ -4,7 +4,7 @@ TARGET=webserver
 # Files to be deployed with the webserver for use by it
 DEPLOYFILES=example_config bunny.jpg chatbox.htm markdown.md design.html \
 libluajit-5.1.so.2 libluajit-5.1.so.2.0.4 libsqlite3.so libsqlite3.so.0 \
-libsqlite3.so.0.8.6
+libsqlite3.so.0.8.6 libcrypto.so.1.0.0 libssl.so.1.0.0 libgcc_s.so.1
 
 # Test executables
 TESTEXEC=config_parser_test response_test server_config_parser_test request_test static_file_handler_test echo_handler_test not_found_handler_test reverse_proxy_handler_test
