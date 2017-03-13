@@ -1,0 +1,63 @@
+<html>
+<head>
+  <title>Chatbox</title>
+</head>
+<body>
+  <div style="margin-left:auto;margin-right:auto;width:800px">
+    <h1 style="text-align:center">Chatbox</h1>
+    <form action="/chatbox.htm" method="post">
+      Username: <input type="text" name="username" style="width:15%">
+      Message: <input type="text" name="message" style="width:50%">
+      <input type="submit" value="Submit">
+    </form>
+<?lua
+local ffi = require("ffi")
+local sqlite = require("sqlite-ffi.init")
+
+-- A simple function to report errors
+-- This will halt the program if there
+-- is an error
+local function dbcheck(rc, errormsg)
+	if rc ~= SQLITE_OK then
+		error(errormsg, 2)
+	end
+	return rc, errormsg
+end
+
+-- Establish a database connection to the chatbox database
+local dbconn = sqlite.DBConnection:open("chatbox.sql")
+if not dbconn then
+    print("Failed to open chatbox.sql")
+    put("Error reading chatbox.sql")
+end
+
+-- Create or get the Chat table in the database
+dbcheck(dbconn:exec("CREATE TABLE IF NOT EXISTS Chat (Name, Text)"))
+
+-- Insert submitted data into a row in the Chat table
+local post = post()
+if post["username"]       and post["message"]       and
+   post["username"] ~= "" and post["message"] ~= "" then
+    local username = post["username"]:gsub("\"", "\\\"")
+    local message  = post["message"]:gsub("\"", "\\\"")
+    dbcheck(dbconn:exec(table.concat({"INSERT INTO Chat (Name, Text) VALUES (\"",
+        username, "\", \"", message, "\")"})))
+end
+
+-- Using a SQL statement, query the database
+stmt = dbconn:prepare("SELECT * from Chat")
+
+-- Use the results() iterator to return individual rows as Lua tables
+for row in stmt:results() do
+    put(table.concat({"    ", row[1], ": ", row[2], " <br />", "\n"}))
+end
+
+-- Finish off the SQL statement
+stmt:finish()
+
+-- Close the database connection
+dbconn:close()
+?>
+  </div>
+</body>
+</html>
