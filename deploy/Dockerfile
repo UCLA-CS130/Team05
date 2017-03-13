@@ -1,0 +1,5 @@
+FROM busybox:ubuntu-14.04
+WORKDIR /opt/webserver
+COPY . /opt/webserver
+EXPOSE 2020:2020
+CMD ["./webserver", "example_config"]
