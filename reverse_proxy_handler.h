@@ -59,10 +59,6 @@ private:
     // need to change the '../' to '/home/'.
     void rerouteRelativeUris(std::string& response_body);
 
-    // // Function for verifying certificate from remote server is https is used
-    // //   Taken from: http://www.boost.org/doc/libs/1_47_0/doc/html/boost_asio/example/ssl/client.cpp
-    // bool verifyCertificate(bool preverified,
-    //   boost::asio::ssl::verify_context& ctx);
 };
 
 REGISTER_REQUEST_HANDLER(ReverseProxyHandler);
