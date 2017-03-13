@@ -1,6 +1,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/asio.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/bind.hpp>
 #include <iostream>
 #include "reverse_proxy_handler.h"
@@ -158,21 +159,16 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
     // Example: Modify request from: /reverse_proxy/static/file1.txt
     // to:                           /static/file1.txt
     // Note: exception to this rule: when prefix is "/" (hence, the check)
-     // std::cout << "\nOriginal request from browser:\n" << request.raw_request() << std::endl;
-     //  std::cout << "\nRemote URI b4:\n" << remote_uri << std::endl;
-     //  std::cout << "\nuri prefix:\n" << original_uri_prefix << std::endl;
-
+    
     if (original_uri_prefix != "/") {
       remote_uri.erase(0, remote_uri.find("/", 1));
     }
 
-    
 
     if (remote_uri.empty()) {
       remote_uri = "/";
     }
 
-    // std::cout << "\nRemote URI after:\n" << remote_uri << std::endl;
     request.SetUri(remote_uri);
 
     // Use resolver to handle DNS lookup if query is not an IP address
@@ -185,15 +181,12 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
       tcp::resolver::query query(remote_host,
                                  remote_port,
                                  boost::asio::ip::resolver_query_base::numeric_service);
-
-      std::cout << "Resolved host" << std::endl;
+  
 
       // If HTTPS, verify certifcate of remote host
       if (std::stoi(remote_port) == 443) {
 
         socket.set_verify_mode(boost::asio::ssl::verify_peer);
-        // socket.set_verify_callback(
-        //   boost::bind(&ReverseProxyHandler::verifyCertificate, this, _1, _2));
         socket.set_verify_callback(boost::asio::ssl::rfc2818_verification(remote_host));
       }
      
@@ -207,8 +200,6 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
           return "RequestHandler::Error";
       }
 
-      std::cout << "Connected to host" << std::endl;
-      // std::cerr << "Got past connecting to remote_host!" << std::endl;
 
       // If HTTPS, need to do SSL handshake
       if (std::stoi(remote_port) == 443) {
@@ -221,12 +212,8 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
           return "RequestHandler::Error";
         }
 
-
       }
-      
 
-
-      // std::cout << "\nRequest from browser:\n" << request.raw_request() << std::endl;
       std::string remote_request = request.raw_request();
       size_t host_pos = remote_request.find("Host");
       size_t host_end = remote_request.find("\r\n", host_pos);
@@ -255,7 +242,7 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
         remote_request.replace(http_pos, http_len, "HTTP/1.0");
       }
 
-      std::cout << "Request being sent to remote server:\n" << remote_request << std::endl;
+     
 
       // socket.next_layer().send(boost::asio::buffer(remote_request));
       if (std::stoi(remote_port) == 443) {
@@ -275,17 +262,10 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
           bytes_received = boost::asio::read(socket.next_layer(), boost::asio::buffer(response_buffer), ec);
         }
 
-        
-        // if (!ec) {
-          new_response.append(response_buffer, bytes_received);
+        new_response.append(response_buffer, bytes_received);
 
-          std::cout << std::string(response_buffer, bytes_received) << std:: endl;
-        // }
-         std::cout << "bytes_received: " << bytes_received << "    ec: " << ec << std::endl;
       } while (!ec);
 
-
-      // std::cout << "Response from server:\n" << new_response << std::endl;
 
       if (new_response.find("HTTP/1.1 302 Found") != std::string::npos) {
         got_302 = true;
@@ -303,7 +283,7 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
     } while (got_302);
 
     
-    std::cout << "Error value: " << ec.value() << std::endl;
+    
     // Checking ec set when reading response from remote host
     switch (ec.value()) {
       case boost::asio::error::eof:
@@ -368,22 +348,22 @@ RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request
     return RequestHandler::OK;
 }
 
-// Function for verifying certificate from remote server is https is used
-  //   Taken from: http://www.boost.org/doc/libs/1_47_0/doc/html/boost_asio/example/ssl/client.cpp
-bool ReverseProxyHandler::verifyCertificate(bool preverified,
-    boost::asio::ssl::verify_context& ctx) {
-  // The verify callback can be used to check whether the certificate that is
-  // being presented is valid for the peer. For example, RFC 2818 describes
-  // the steps involved in doing this for HTTPS. Consult the OpenSSL
-  // documentation for more details. Note that the callback is called once
-  // for each certificate in the certificate chain, starting from the root
-  // certificate authority.
+// // Function for verifying certificate from remote server is https is used
+//   //   Taken from: http://www.boost.org/doc/libs/1_47_0/doc/html/boost_asio/example/ssl/client.cpp
+// bool ReverseProxyHandler::verifyCertificate(bool preverified,
+//     boost::asio::ssl::verify_context& ctx) {
+//   // The verify callback can be used to check whether the certificate that is
+//   // being presented is valid for the peer. For example, RFC 2818 describes
+//   // the steps involved in doing this for HTTPS. Consult the OpenSSL
+//   // documentation for more details. Note that the callback is called once
+//   // for each certificate in the certificate chain, starting from the root
+//   // certificate authority.
 
-  // In this example we will simply print the certificate's subject name.
-  char subject_name[256];
-  X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
-  X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
-  std::cout << "Verifying " << subject_name << "\n";
+//   // In this example we will simply print the certificate's subject name.
+//   char subject_name[256];
+//   X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+//   X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
+//   std::cout << "Verifying " << subject_name << "\n";
 
-  return preverified;
-}
+//   return preverified;
+// }
