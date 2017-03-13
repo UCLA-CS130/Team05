@@ -45,9 +45,17 @@
         was not implemented by our team and the functionality or appearance of<br>
         the site may not be perfect.
         </p>
+
+        <p>HTTPS support was added as a feature, utilizing Boost's implemntation that<br>
+        uses an the OpenSSL library. If the remote port for the reverse proxy is an <br>
+        HTTPS port (443), then it verifies the remote host's certificate before<br>
+        performing the SSL handshake. If the handshake passes, ssl streams (with an<br>
+        underlying TCP boost socket) are used for the rest of the communicaiton. If<br>
+        the port is not an HTTPS port, the underyling sockets are used directly for<br>
+        communication instead.
         <p>Usage:<br>
-        <a href="http://54.213.82.160:2020/reverse_proxy">
-        Test the reverse proxy for www.ucla.edu</a></p>
+        <a href="http://54.213.82.160:2020">
+        Test the reverse proxy for https://www.google.com</a></p>
     </li>
     <li>
         <p><strong>Status Handler</strong></p>
@@ -95,7 +103,7 @@ that the chatbox example does not take advantage of.</p>
 complex server-side apps using the web server. Mixed with JavaScript, the<br>
 possibilities are numerous as to what can be done.</p>
 
-<h3>HTTPS</h3>
+
 
 </body>
 </html>
