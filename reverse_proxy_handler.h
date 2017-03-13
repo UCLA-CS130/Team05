@@ -3,6 +3,7 @@
 
 #include "request_handler.h"
 
+
 // Interacts with clients from the Internet at-large
 // as if this server was the one serving up the
 // content requested, rather than the remote servers
@@ -57,6 +58,7 @@ private:
     // example a stylesheet for www.foobar.com/home with the path: 'href="../css/style.css', we
     // need to change the '../' to '/home/'.
     void rerouteRelativeUris(std::string& response_body);
+
 };
 
 REGISTER_REQUEST_HANDLER(ReverseProxyHandler);

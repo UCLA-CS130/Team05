@@ -96,3 +96,9 @@ that the chatbox example does not take advantage of.
 </ul>
 ```
 
+## HTTPS Support for Reverse Proxy  
+HTTPS support was added to the reverse proxy handler. It takes advantage of  
+Boost implementations that uses OpenSSL. As a result, the command "sudo apt-get  
+install libssl-dev" needs to be run in order to install the dependencies needed  
+for OpenSSL. In order to see it in action, run "./webserver https_proxy_config".  
+Visiting "localhost:4343" will load the page from "https://www.google.com".

@@ -21,8 +21,8 @@ CXXFLAGS+= -std=c++11 -pthread -Wall -Werror -ILuaJIT-2.0.4/include/luajit-2.0
 
 # Linker flags
 LDFLAGS+= -static-libgcc -static-libstdc++ -Wl,-rpath '-Wl,$$ORIGIN' \
--L./LuaJIT-2.0.4/src -lluajit -pthread -Wl,-Bstatic -lboost_system \
--lboost_regex -ldl
+-L./LuaJIT-2.0.4/src -lluajit -pthread -lssl -lcrypto -Wl,-Bstatic -lboost_system \
+-lboost_regex -ldl 
 
 # Test flags
 TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread \

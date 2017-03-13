@@ -41,6 +41,11 @@ curl_output_expected_static_image = [
     "Content-Type: image/jpeg\r\n"
 ]
 
+# Simple test to see if we get an OK from server with remote host being google.com
+curl_output_expected_https_reverse_proxy = [
+    "HTTP/1\\.0 200 OK\r\n"
+]
+
 # The expected output from the multithreading test
 expected_multithreaded_output = (
     "HTTP/1.0 200 OK\r\n"
@@ -59,6 +64,9 @@ webserver1 = Popen(["./webserver", "example_config"], stdout=PIPE)
 
 # Open another web server in a subprocess
 webserver2 = Popen(["./webserver", "proxy_test_config"], stdout=PIPE)
+
+# Open yet another web server in a subprocess
+webserver3 = Popen(["./webserver", "https_proxy_config"], stdout=PIPE)
 
 # Request an echo from the webserver using curl
 curl = Popen(["curl", "-0", "-s", "localhost:2020/echo"], stdout=PIPE)
@@ -134,6 +142,7 @@ if not curl_output == "TEST\n":
 
 # Request an image from the  reverse proxy webserver
 curl = Popen(["curl", "-0", "-s", "-o", "proxy_bunny", "localhost:4242/reverse_proxy/bunny.jpg"], stdout=PIPE)
+curl.wait()
 diff = Popen(["cmp", "bunny.jpg", "proxy_bunny"], stdout=PIPE)
 if (diff.communicate()[0].decode() != ""):
     ec += 1
@@ -152,6 +161,24 @@ if (curl_output != curl_output_expected):
 # Close the webserver
 webserver1.terminate()
 webserver2.terminate()
+
+# Check if we get a valid response from https reverse proxy to google.com
+curl = Popen(["curl", "-0", "-s", "-I", "localhost:4343"], stdout=PIPE)
+ec += outputChecker(curl, curl_output_expected_https_reverse_proxy)
+
+# Get page through proxy and straight from google.com and compare results
+curl = Popen(["curl", "-0", "-s", "localhost:4343"], stdout=PIPE)
+# Grab first 900 characters because script associated with timestamp makes results differ
+curl_output = curl.communicate()[0].decode("windows-1252")[:900]
+curl_expected = Popen(["curl", "-0", "-s", "https://www.google.com"], stdout=PIPE)
+curl_output_expected = curl_expected.communicate()[0].decode("windows-1252")[:900]
+if (curl_output != curl_output_expected):
+    ec += 1
+    sys.stdout.write("FAILED to match google.com via reverse-proxy\n")
+
+
+# Close the webserver
+webserver3.terminate()
 
 # Return 0 if the test succeeded or some other value on failure
 if ec == 0:

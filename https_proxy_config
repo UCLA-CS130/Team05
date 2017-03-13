@@ -1,0 +1,25 @@
+# Note:
+#  Order of path blocks in the config file doesn't matter
+#  Matching is by longest prefix
+#  Duplicate paths in the config are illegal
+
+# This is a comment
+
+port 4343;  # This is also a comment
+
+path /static StaticFileHandler {
+  root ./;
+}
+
+path /echo EchoHandler {}
+
+path /status StatusHandler {}
+
+path / ReverseProxyHandler {
+    remote_host www.google.com;
+    remote_port 443;
+}
+
+# Default response handler if no handlers match
+default NotFoundHandler {}
+
