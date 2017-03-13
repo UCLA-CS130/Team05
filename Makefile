@@ -2,7 +2,7 @@
 TARGET=webserver
 
 # Files to be deployed with the webserver for use by it
-DEPLOYFILES=example_config bunny.jpg chatbox.htm markdown.md *.so
+DEPLOYFILES=example_config bunny.jpg chatbox.htm markdown.md *.so design.html
 
 # Test executables
 TESTEXEC=config_parser_test response_test server_config_parser_test request_test static_file_handler_test echo_handler_test not_found_handler_test reverse_proxy_handler_test
