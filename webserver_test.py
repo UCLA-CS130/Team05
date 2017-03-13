@@ -69,7 +69,7 @@ curl = Popen(["curl", "-0", "-s", "localhost:2020/echo/"], stdout=PIPE)
 ec += outputChecker(curl, curl_output_expected_echo2)
 
 # Request a file from the webserver using curl
-curl = Popen(["curl", "-0", "-s", "localhost:2020/test_file"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "localhost:2020/static/test_file"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
 sys.stdout.write("\nServer output for integration test\n")
 sys.stdout.write("==========\n")
@@ -81,11 +81,11 @@ if not curl_output == "TEST\n":
     sys.stdout.write("  TEST\n")
 
 # Request an image file from the webserver using curl
-curl = Popen(["curl", "-0", "-s", "-I", "localhost:2020/bunny.jpg"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "-I", "localhost:2020/static/bunny.jpg"], stdout=PIPE)
 ec += outputChecker(curl, curl_output_expected_static_image)
 
 # Request a file from the webserver using curl that does not exist
-curl = Popen(["curl", "-0", "-s", "localhost:2020/doesnotexist"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "localhost:2020/static/doesnotexist"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
 sys.stdout.write("\nServer output for integration test\n")
 sys.stdout.write("==========\n")
@@ -121,7 +121,7 @@ curl = Popen(["curl", "-0", "-s", "localhost:4242/reverse_proxy/echo"], stdout=P
 ec += outputChecker(curl, curl_output_expected_echo)
 
 # Request a file from the  reverse proxy webserver
-curl = Popen(["curl", "-0", "-s", "localhost:4242/reverse_proxy/test_file"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "localhost:4242/reverse_proxy/static/test_file"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
 sys.stdout.write("\nServer output for integration test\n")
 sys.stdout.write("==========\n")
