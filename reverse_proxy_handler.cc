@@ -183,8 +183,8 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
       // If HTTPS, verify certifcate of remote host
       if (std::stoi(remote_port) == 443) {
 
-        socket.set_verify_mode(boost::asio::ssl::verify_peer);
-        socket.set_verify_callback(boost::asio::ssl::rfc2818_verification(remote_host));
+        // socket.set_verify_mode(boost::asio::ssl::verify_peer);
+        // socket.set_verify_callback(boost::asio::ssl::rfc2818_verification(remote_host));
       }
 
       // A hostname could resolve to multiple endpoints to try;
